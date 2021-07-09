@@ -1,0 +1,266 @@
+openapi: 3.0.2
+info:
+  title: EployeeAPI
+  version: "1.0.0"
+  
+paths:
+  /api/auth:
+    post:
+      description: "Authorization user"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Employee"
+      responses:
+        '200':
+          description: "Successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        default:
+          $ref: "#/components/schemas/Error"
+    put:
+      description: "swap tokens"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Token"
+                - required:
+                  - refreshToken
+      responses:
+        '201':
+          description: "Ok"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        default:
+          $ref: '#/components/schemas/Error'
+  /employees:
+    get:
+      description: Get all employees
+      responses:
+        '200':
+          description: Get an array of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+  /employee/{id}:
+    delete:
+      description: "delete employee by id"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: "No Content"
+        default:
+          $ref: "#/components/schemas/Error"
+  /employee:
+    get:
+      description: Get an employee
+      responses:
+        '200':
+          description: Get an employee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+    post:
+      description: Create employee
+      requestBody:
+        required: true
+        content: 
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEmployee"
+      responses:
+        '201': 
+          description: "Created"
+        default:
+          $ref: "#/components/schemas/Error"
+    put:
+      description: "update employee"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/UpdateEmployee"
+                - required:
+                  - updateFirstName
+                  - updateLasName
+                  - updateUuid
+                  - updatePositionId
+      responses:
+        '201':
+          description: "Ok"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        default:
+          $ref: '#/components/schemas/Error'
+    
+      
+  /positions:
+    get:
+      description: Get all positions
+      responses:
+        '200':
+          description: Get an array of position
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Position'
+  /position:
+    get:
+      description: Get an position
+      responses:
+        '200':
+          description: Get an position
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Position'
+    post:
+      description: Create position 
+      requestBody:
+        required: true
+        content: 
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePosition"
+      responses:
+        '201': 
+          description: "Created"
+        default:
+          $ref: "#/components/schemas/Error"
+    put:
+      description: "update position"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/UpdatePosition"
+                - required:
+                  - updateName
+                  - updateSalary
+                  - updateUuid
+      responses:
+        '201':
+          description: "Ok"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Position"
+        default:
+          $ref: '#/components/schemas/Error'
+  /position/{id}:
+    delete:
+      description: "delete position by id"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: "No Content"
+        default:
+          $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Employee:
+      properties:
+        firstName:
+          type: string
+        lasName:
+          type: string
+        uuid:
+          type: string
+        positionID:
+          type: string
+    CreateEmployee:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lasName:
+          type: string
+        uuid:
+          type: string
+        PositionID:
+          type: string
+    Position:
+      properties:
+        name:
+          type: string
+        salary: 
+          type: integer
+        uuid:
+          type: string
+    CreatePosition:
+      type: object
+      properties:
+        name:
+            type: string
+        salary: 
+          type: integer
+        uuid:
+          type: string
+    Token:
+      type: object
+      properties:
+        token: 
+          type: string
+        refreshToken:
+          type: string
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        message:
+          type: string
+      required:
+        - error_code
+        - message
+    UpdateEmployee:
+      type: object
+      properties:
+        updateFirstName:
+          type: string
+        upfateLastName:
+          type: string
+        updateUuid:
+          type: string
+        updatePositionID:
+          type: string
+    UpdatePosition:
+      type: object
+      properties:
+        updateName:
+          type: string
+        updateSalary:
+          type: integer
+        updateUuid:
+          type: string
