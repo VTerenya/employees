@@ -2,11 +2,114 @@ openapi: 3.0.2
 info:
   title: EployeeAPI
   version: "1.0.0"
-  
+
 paths:
-  /api/auth:
+  /auth:
     post:
+      security:
+        - bearerAuth: []
       description: "Authorization user"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/User"
+      responses:
+        '200':
+          description: "Successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/Success"
+        '401':
+          description: "Unauthorization"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/UnauthorizedError"
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/NotFoundError"
+        '5XX':
+          description: Unexpected error.
+  /employees:
+    get:
+      description: Get all employees
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Number of equal parts of employees
+        - in: query
+          name: number
+          schema:
+            type: integer
+          description: Number of element of one page
+      responses:
+        '200':
+          description: Get an array of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/NotFoundError"
+        '429':
+          description: Too many requests
+  /employee/{id}:
+    delete:
+      description: "delete employee by id"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/Employee"
+      responses:
+        '204':
+          description: "No Content"
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/NotFoundError"
+  /employee:
+    get:
+      description: Get an employee
+      responses:
+        '200':
+          description: Get an employee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/NotFoundError"
+        '429':
+          description: Too many requests
+        '5XX':
+          description: Unexpected error.
+    post:
+      security:
+        - bearerAuth: []
+      description: Create employee
       requestBody:
         required: true
         content:
@@ -19,78 +122,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Employee"
-        default:
-          $ref: "#/components/schemas/Error"
-    put:
-      description: "swap tokens"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/Token"
-                - required:
-                  - refreshToken
-      responses:
-        '201':
-          description: "Ok"
+                $ref: "#/components/responses/Success"
+        '401':
+          description: "Unauthorization"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Token"
-        default:
-          $ref: '#/components/schemas/Error'
-  /employees:
-    get:
-      description: Get all employees
-      responses:
-        '200':
-          description: Get an array of employees
+                $ref: "#/components/responses/UnauthorizedError"
+        '404':
+          description: "Page not found"
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Employee'
-  /employee/{id}:
-    delete:
-      description: "delete employee by id"
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: "No Content"
-        default:
-          $ref: "#/components/schemas/Error"
-  /employee:
-    get:
-      description: Get an employee
-      responses:
-        '200':
-          description: Get an employee
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Employee'
-    post:
-      description: Create employee
-      requestBody:
-        required: true
-        content: 
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateEmployee"
-      responses:
-        '201': 
-          description: "Created"
-        default:
-          $ref: "#/components/schemas/Error"
+                $ref: "#/components/responses/NotFoundError"
+        '5XX':
+          description: Unexpected error.
     put:
       description: "update employee"
       requestBody:
@@ -99,12 +145,12 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: "#/components/schemas/UpdateEmployee"
+                - $ref: "#/components/schemas/Employee"
                 - required:
-                  - updateFirstName
-                  - updateLasName
-                  - updateUuid
-                  - updatePositionId
+                    - update_firstName
+                    - update_lasName
+                    - update_uuid
+                    - update_position_id
       responses:
         '201':
           description: "Ok"
@@ -112,13 +158,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Employee"
-        default:
-          $ref: '#/components/schemas/Error'
-    
-      
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/NotFoundError"
+        '415':
+          description: "Unsupported media type"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/UnsupportedType"
+
   /positions:
     get:
       description: Get all positions
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Number of equal parts of positions
+        - in: query
+          name: number
+          schema:
+            type: integer
+          description: Number of element of one page
       responses:
         '200':
           description: Get an array of position
@@ -128,6 +194,14 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Position'
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/NotFoundError"
+        '429':
+          description: Too many requests
   /position:
     get:
       description: Get an position
@@ -139,18 +213,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/Position'
     post:
-      description: Create position 
+      security:
+        - bearerAuth: []
+      description: Create position
       requestBody:
         required: true
-        content: 
+        content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreatePosition"
+              $ref: "#/components/schemas/Position"
       responses:
-        '201': 
+        '201':
           description: "Created"
-        default:
-          $ref: "#/components/schemas/Error"
+
     put:
       description: "update position"
       requestBody:
@@ -159,11 +234,11 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: "#/components/schemas/UpdatePosition"
+                - $ref: "#/components/schemas/Position"
                 - required:
-                  - updateName
-                  - updateSalary
-                  - updateUuid
+                    - update_name
+                    - update_salary
+                    - update_uuid
       responses:
         '201':
           description: "Ok"
@@ -171,8 +246,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Position"
-        default:
-          $ref: '#/components/schemas/Error'
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/NotFoundError"
+        '415':
+          description: "Unsupported media type"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/UnsupportedType"
   /position/{id}:
     delete:
       description: "delete position by id"
@@ -185,10 +270,20 @@ paths:
       responses:
         '204':
           description: "No Content"
-        default:
-          $ref: "#/components/schemas/Error"
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/NotFoundError"
 components:
   schemas:
+    User:
+      properties:
+        login:
+          type: string
+        password:
+          type: string
     Employee:
       properties:
         firstName:
@@ -199,68 +294,33 @@ components:
           type: string
         positionID:
           type: string
-    CreateEmployee:
-      type: object
-      properties:
-        firstName:
-          type: string
-        lasName:
-          type: string
-        uuid:
-          type: string
-        PositionID:
-          type: string
     Position:
       properties:
         name:
           type: string
-        salary: 
+        salary:
           type: integer
         uuid:
           type: string
-    CreatePosition:
-      type: object
-      properties:
-        name:
-            type: string
-        salary: 
-          type: integer
-        uuid:
-          type: string
-    Token:
-      type: object
-      properties:
-        token: 
-          type: string
-        refreshToken:
-          type: string
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-        message:
-          type: string
-      required:
-        - error_code
-        - message
-    UpdateEmployee:
-      type: object
-      properties:
-        updateFirstName:
-          type: string
-        upfateLastName:
-          type: string
-        updateUuid:
-          type: string
-        updatePositionID:
-          type: string
-    UpdatePosition:
-      type: object
-      properties:
-        updateName:
-          type: string
-        updateSalary:
-          type: integer
-        updateUuid:
-          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+    NotFoundError:
+      description: Not Found
+    Success:
+      description: Ok
+    Created:
+      description: Created
+    NotAllowed:
+      description: Method not allowed
+    NoContent:
+      description: No content
+    BadRequest:
+      description: Bad request
+    UnsupportedType:
+      description: Unsupported media type
