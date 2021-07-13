@@ -35,8 +35,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/responses/NotFoundError"
-        '5XX':
-          description: Unexpected error.
+        '500':
+          description: Enternal Server Error.
   /employees:
     get:
       description: Get all employees
@@ -57,9 +57,12 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Employee'
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  number:
+                    type: integer
         '404':
           description: "Page not found"
           content:
@@ -104,8 +107,8 @@ paths:
                 $ref: "#/components/responses/NotFoundError"
         '429':
           description: Too many requests
-        '5XX':
-          description: Unexpected error.
+        '500':
+          description: Enternal Server Error.
     post:
       security:
         - bearerAuth: []
@@ -135,10 +138,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/responses/NotFoundError"
-        '5XX':
-          description: Unexpected error.
+        '500':
+          description: Enternal Server Error.
     put:
       description: "update employee"
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -191,9 +196,12 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Position'
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  number:
+                    type: integer
         '404':
           description: "Page not found"
           content:
@@ -228,6 +236,8 @@ paths:
 
     put:
       description: "update position"
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -299,9 +309,10 @@ components:
         name:
           type: string
         salary:
-          type: integer
+          type: number
         uuid:
           type: string
+
   securitySchemes:
     bearerAuth:
       type: http
