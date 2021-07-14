@@ -15,60 +15,48 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: "#/components/schemas/User"
+                - $ref: "#/components/schemas/user"
       responses:
         '200':
           description: "Successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/Success"
+                $ref: "#/components/responses/success"
         '401':
           description: "Unauthorization"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/UnauthorizedError"
+                $ref: "#/components/responses/unauthorized_error"
         '404':
           description: "Page not found"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/NotFoundError"
+                $ref: "#/components/responses/not_found_error"
         '500':
           description: Enternal Server Error.
   /employees:
     get:
-      description: Get all employees
+      operationId: getAll
+      description: Return a books list
       parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-          description: Number of equal parts of employees
-        - in: query
-          name: number
-          schema:
-            type: integer
-          description: Number of element of one page
+        - $ref: "#/parameters/skip_param"
+        - $ref: "#/parameters/limit_param"
       responses:
         '200':
-          description: Get an array of employees
+          description: Success
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  page:
-                    type: integer
-                  number:
-                    type: integer
+                $ref: '#/components/schemas/employees'
         '404':
           description: "Page not found"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/NotFoundError"
+                $ref: "#/components/responses/not_found_error"
         '429':
           description: Too many requests
   /employee/{id}:
@@ -79,7 +67,7 @@ paths:
           name: id
           required: true
           schema:
-            $ref: "#/components/schemas/Employee"
+            $ref: "#/components/schemas/employee"
       responses:
         '204':
           description: "No Content"
@@ -88,7 +76,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/NotFoundError"
+                $ref: "#/components/responses/not_found_error"
   /employee:
     get:
       description: Get an employee
@@ -98,13 +86,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Employee'
+                $ref: '#/components/schemas/employee'
         '404':
           description: "Page not found"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/NotFoundError"
+                $ref: "#/components/responses/not_found_error"
         '429':
           description: Too many requests
         '500':
@@ -118,26 +106,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Employee"
+              $ref: "#/components/schemas/employee"
       responses:
         '200':
           description: "Successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/Success"
+                $ref: "#/components/responses/success"
         '401':
           description: "Unauthorization"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/UnauthorizedError"
+                $ref: "#/components/responses/unauthorized_error"
         '404':
           description: "Page not found"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/NotFoundError"
+                $ref: "#/components/responses/not_found_error"
         '500':
           description: Enternal Server Error.
     put:
@@ -150,7 +138,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: "#/components/schemas/Employee"
+                - $ref: "#/components/schemas/employee"
                 - required:
                     - update_firstName
                     - update_lasName
@@ -162,52 +150,39 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Employee"
+                $ref: "#/components/schemas/employee"
         '404':
           description: "Page not found"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/NotFoundError"
+                $ref: "#/components/responses/not_found_error"
         '415':
           description: "Unsupported media type"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/UnsupportedType"
+                $ref: "#/components/responses/unsupported_type"
 
   /positions:
     get:
-      description: Get all positions
+      description: return a position list
       parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-          description: Number of equal parts of positions
-        - in: query
-          name: number
-          schema:
-            type: integer
-          description: Number of element of one page
+        - $ref: '#/parameters/skip_param'
+        - $ref: '#/parameters/limit_param'
       responses:
         '200':
-          description: Get an array of position
+          description: Success
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  page:
-                    type: integer
-                  number:
-                    type: integer
+                $ref: '#/components/schemas/positions'
         '404':
           description: "Page not found"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/NotFoundError"
+                $ref: "#/components/responses/not_found_error"
         '429':
           description: Too many requests
   /position:
@@ -219,7 +194,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Position'
+                $ref: '#/components/schemas/position'
     post:
       security:
         - bearerAuth: []
@@ -229,7 +204,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Position"
+              $ref: "#/components/schemas/position"
       responses:
         '201':
           description: "Created"
@@ -244,7 +219,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: "#/components/schemas/Position"
+                - $ref: "#/components/schemas/position"
                 - required:
                     - update_name
                     - update_salary
@@ -255,19 +230,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Position"
+                $ref: "#/components/schemas/position"
         '404':
           description: "Page not found"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/NotFoundError"
+                $ref: "#/components/responses/not_found_error"
         '415':
           description: "Unsupported media type"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/UnsupportedType"
+                $ref: "#/components/responses/unsupported_type"
   /position/{id}:
     delete:
       description: "delete position by id"
@@ -285,26 +260,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/NotFoundError"
+                $ref: "#/components/responses/not_found_error"
 components:
   schemas:
-    User:
+    user:
       properties:
         login:
           type: string
         password:
           type: string
-    Employee:
+    employee:
       properties:
-        firstName:
+        first_name:
           type: string
-        lasName:
+        last_name:
           type: string
         uuid:
           type: string
-        positionID:
+        position_id:
           type: string
-    Position:
+    position:
       properties:
         name:
           type: string
@@ -312,26 +287,80 @@ components:
           type: number
         uuid:
           type: string
-
+    employees:
+      properties:
+        paging:
+          type: object
+          properties:
+            skip:
+              type: integer
+            limit:
+              type: integer
+            count:
+              type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/employee'
+      required:
+        - paging
+        - data
+    positions:
+      properties:
+        paging:
+          type: object
+          properties:
+            skip:
+              type: integer
+            limit:
+              type: integer
+            count:
+              type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/employee'
+      required:
+        - paging
+        - data
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
   responses:
-    UnauthorizedError:
+    unauthorized_error:
       description: Access token is missing or invalid
-    NotFoundError:
+    not_found_error:
       description: Not Found
-    Success:
+    success:
       description: Ok
-    Created:
+    created:
       description: Created
-    NotAllowed:
+    not_allowed:
       description: Method not allowed
-    NoContent:
+    no_content:
       description: No content
-    BadRequest:
+    bad_request:
       description: Bad request
-    UnsupportedType:
+    unsupported_type:
       description: Unsupported media type
+
+parameters:
+  skip_param:
+    name: skip
+    in: query
+    description: number of items to skip
+    required: false
+    type: integer
+    format: int32
+    minimum: 0
+  limit_param:
+    name: limit
+    in: query
+    description: max param to return
+    required: false
+    type: integer
+    format: int32
+    maximum: 100
+    minimum: 0
