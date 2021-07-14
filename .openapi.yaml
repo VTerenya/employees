@@ -307,7 +307,7 @@ components:
         - data
     positions:
       properties:
-        paging:
+        pagination:
           type: object
           properties:
             skip:
@@ -321,7 +321,7 @@ components:
           items:
             $ref: '#/components/schemas/employee'
       required:
-        - paging
+        - pagination
         - data
   securitySchemes:
     bearerAuth:
