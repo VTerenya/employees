@@ -1,4 +1,4 @@
-package position
+package internal
 
 type Position struct {
 	ID     string  `json:"id"`

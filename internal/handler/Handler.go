@@ -3,9 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	employee2 "github.com/VTerenya/employees/internal/employee"
-	"github.com/VTerenya/employees/internal/position"
-	"github.com/VTerenya/employees/internal/repository"
+	"github.com/VTerenya/employees/internal"
+	"github.com/VTerenya/employees/internal/service"
 	"net/http"
 	"regexp"
 )
@@ -21,11 +20,11 @@ var (
 )
 
 type Handler struct {
-	repo *repository.Repository
+	service *service.Service
 }
 
-func NewHandler(repo *repository.Repository) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(ser *service.Service) *Handler {
+	return &Handler{service: ser}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +73,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
-	positions := h.repo.GetPositions()
+	positions:=h.service.GetPositions()
 	jsonBytes, err := json.Marshal(positions)
 	if err != nil {
 		http.Error(w, "Error with server!", http.StatusInternalServerError)
@@ -88,7 +87,7 @@ func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getEmployees(w http.ResponseWriter, r *http.Request) {
-	employees := h.repo.GetEmployees()
+	employees := h.service.GetEmployees()
 	jsonBytes, err := json.Marshal(employees)
 	if err != nil {
 		http.Error(w, "Error with server!", http.StatusInternalServerError)
@@ -107,7 +106,7 @@ func (h *Handler) getPosition(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	p, err := h.repo.GetPosition(matches[1])
+	p, err := h.service.GetPosition(matches[1])
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		_, err := w.Write([]byte("Position not found"))
@@ -134,7 +133,7 @@ func (h *Handler) getEmployee(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	e, err := h.repo.GetEmployee(matches[1])
+	e, err := h.service.GetEmployee(matches[1])
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		_, err := w.Write([]byte("user not found"))
@@ -156,12 +155,15 @@ func (h *Handler) getEmployee(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) createPosition(w http.ResponseWriter, r *http.Request) {
-	var p position.Position
+	var p internal.Position
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, "Error with server!", http.StatusInternalServerError)
 		return
 	}
-	h.repo.CreatePosition(p)
+	err:=h.service.CreatePosition(p)
+	if err != nil{
+		http.Error(w,err.Error(),http.StatusNotFound)
+	}
 	jsonBytes, err := json.Marshal(p)
 	if err != nil {
 		http.Error(w, "Error with server!", http.StatusInternalServerError)
@@ -175,12 +177,15 @@ func (h *Handler) createPosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) createEmployee(w http.ResponseWriter, r *http.Request) {
-	var e employee2.Employee
+	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, "Error with server!", http.StatusInternalServerError)
 		return
 	}
-	h.repo.CreateEmployee(e)
+	err:=h.service.CreateEmployee(e)
+	if err != nil{
+		http.Error(w,err.Error(),http.StatusNotFound)
+	}
 	jsonBytes, err := json.Marshal(e)
 	if err != nil {
 		http.Error(w, "Error with server!", http.StatusInternalServerError)
@@ -194,12 +199,12 @@ func (h *Handler) createEmployee(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) updatePosition(w http.ResponseWriter, r *http.Request) {
-	var p position.Position
+	var p internal.Position
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, "Error with server!", http.StatusInternalServerError)
 		return
 	}
-	err := h.repo.UpdatePosition(p)
+	err := h.service.UpdatePosition(p)
 	if err != nil {
 		http.Error(w, "Error: no content!", http.StatusNoContent)
 		return
@@ -217,12 +222,12 @@ func (h *Handler) updatePosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) updateEmployee(w http.ResponseWriter, r *http.Request) {
-	var e employee2.Employee
+	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, "Error with server!", http.StatusInternalServerError)
 		return
 	}
-	err := h.repo.UpdateEmployee(e)
+	err := h.service.UpdateEmployee(e)
 	if err != nil {
 		http.Error(w, "Error: no content!", http.StatusNoContent)
 		return
@@ -241,7 +246,7 @@ func (h *Handler) updateEmployee(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) deletePosition(w http.ResponseWriter, r *http.Request) {
 	deleteID := positionRe.FindStringSubmatch(r.URL.Path)[1]
-	err := h.repo.DeletePosition(deleteID)
+	err := h.service.DeletePosition(deleteID)
 	if err != nil {
 		http.Error(w, "Error: no content", http.StatusNoContent)
 	}
@@ -259,7 +264,7 @@ func (h *Handler) deletePosition(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) deleteEmployee(w http.ResponseWriter, r *http.Request) {
 	deleteID := employeeRe.FindStringSubmatch(r.URL.Path)[1]
-	err := h.repo.DeleteEmployee(deleteID)
+	err := h.service.DeleteEmployee(deleteID)
 	if err != nil {
 		http.Error(w, "Error: no content", http.StatusNoContent)
 	}

@@ -1,31 +1,68 @@
 package repository
 
 import (
-	"github.com/VTerenya/employees/internal/database"
-	"github.com/VTerenya/employees/internal/employee"
-	"github.com/VTerenya/employees/internal/position"
-	"github.com/VTerenya/employees/internal/todoDatabase"
+	"github.com/VTerenya/employees/internal"
+	"strconv"
 )
 
-type Todo interface {
-	CreatePosition(p position.Position)
-	CreateEmployee(e employee.Employee)
-	GetPositions() []position.Position
-	GetEmployees() []employee.Employee
-	GetPosition(id string) (position.Position, error)
-	GetEmployee(id string) (employee.Employee, error)
-	DeletePosition(id string) error
-	DeleteEmployee(id string) error
-	UpdatePosition(p position.Position) error
-	UpdateEmployee(e employee.Employee) error
+type Handler interface {
+	GetPositions() map[string]internal.Position
+	GetEmployees() map[string]internal.Employee
+	AddPosition(p internal.Position)
+	AddEmployee(e internal.Employee)
 }
 
 type Repository struct {
-	Todo
+	Handler
 }
 
-func NewRepository(data *database.Database) *Repository {
+func NewRepository(data *database) *Repository {
 	return &Repository{
-		todoDatabase.NewTodoDatabase(data),
+		NewTodoRepository(data),
 	}
+}
+
+type todoRepository struct {
+	data *database
+}
+
+func NewTodoRepository(data *database) *todoRepository {
+	return &todoRepository{data: data}
+}
+
+func (t todoRepository) GetPositions() map[string]internal.Position {
+	return t.data.GetPosition()
+
+}
+
+func (t todoRepository) GetEmployees() map[string]internal.Employee {
+	return t.data.GetEmployees()
+}
+
+func (t todoRepository) AddPosition(p internal.Position) {
+	t.data.GetPosition()[strconv.Itoa(len(t.data.GetPosition())+1)] = p
+}
+
+func (t todoRepository) AddEmployee(e internal.Employee) {
+	t.data.GetEmployees()[strconv.Itoa(len(t.data.GetEmployees())+1)] = e
+}
+
+type database struct {
+	employees map[string]internal.Employee
+	positions map[string]internal.Position
+}
+
+func NewDataBase() *database {
+	return &database{
+		employees: map[string]internal.Employee{},
+		positions: map[string]internal.Position{},
+	}
+}
+
+func (d database) GetEmployees() map[string]internal.Employee {
+	return d.employees
+}
+
+func (d database) GetPosition() map[string]internal.Position {
+	return d.positions
 }

@@ -1,18 +1,19 @@
 package main
 
 import (
-	"github.com/VTerenya/employees/internal/database"
 	"github.com/VTerenya/employees/internal/handler"
 	"github.com/VTerenya/employees/internal/repository"
+	"github.com/VTerenya/employees/internal/service"
 	"log"
 	"net/http"
 )
 
 func main() {
 	mux := http.NewServeMux()
-	myData := database.NewDatabase()
+	myData := repository.NewDataBase()
 	myRepo := repository.NewRepository(myData)
-	myH := handler.NewHandler(myRepo)
+	myServ:= service.NewService(myRepo)
+	myH := handler.NewHandler(myServ)
 	mux.Handle("/positions", myH)
 	mux.Handle("/position/", myH)
 	mux.Handle("/position", myH)
