@@ -275,16 +275,18 @@ components:
           type: string
         last_name:
           type: string
+          format: float
         uuid:
           type: string
         position_id:
-          type: string
+          type: object
     position:
       properties:
         name:
           type: string
         salary:
           type: number
+          format: float
         uuid:
           type: string
     employees:
