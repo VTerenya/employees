@@ -20,7 +20,7 @@ var (
 )
 
 type Handler struct {
-	service *service.Service
+	service service.ServiceHandler
 }
 
 func NewHandler(ser *service.Service) *Handler {
@@ -81,7 +81,7 @@ func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusBadRequest)
+		http.Error(w, "Error: bad request", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -95,7 +95,7 @@ func (h *Handler) getEmployees(w http.ResponseWriter, r *http.Request) {
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusBadRequest)
+		http.Error(w, "Error: bad request", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -117,12 +117,12 @@ func (h *Handler) getPosition(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonBytes, err := json.Marshal(p)
 	if err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusBadRequest)
+		http.Error(w, "error: bad request", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -136,20 +136,20 @@ func (h *Handler) getEmployee(w http.ResponseWriter, r *http.Request) {
 	e, err := h.service.GetEmployee(matches[1])
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		_, err := w.Write([]byte("user not found"))
+		_, err := w.Write([]byte("employee not found"))
 		if err != nil {
-			http.Error(w, "Error: bad request", http.StatusBadRequest)
+			http.Error(w, "error: bad request", http.StatusBadRequest)
 		}
 		return
 	}
 	jsonBytes, err := json.Marshal(e)
 	if err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusBadRequest)
+		http.Error(w, "error: bad request", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -157,21 +157,21 @@ func (h *Handler) getEmployee(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) createPosition(w http.ResponseWriter, r *http.Request) {
 	var p internal.Position
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	err:=h.service.CreatePosition(p)
 	if err != nil{
-		http.Error(w,err.Error(),http.StatusNotFound)
+		http.Error(w,err.Error(),http.StatusBadRequest)
 	}
 	jsonBytes, err := json.Marshal(p)
 	if err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusBadRequest)
+		http.Error(w, "error: bad request", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -179,21 +179,21 @@ func (h *Handler) createPosition(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) createEmployee(w http.ResponseWriter, r *http.Request) {
 	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	err:=h.service.CreateEmployee(e)
 	if err != nil{
-		http.Error(w,err.Error(),http.StatusNotFound)
+		http.Error(w,err.Error(),http.StatusBadRequest)
 	}
 	jsonBytes, err := json.Marshal(e)
 	if err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusBadRequest)
+		http.Error(w, "error: bad request", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -201,22 +201,22 @@ func (h *Handler) createEmployee(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) updatePosition(w http.ResponseWriter, r *http.Request) {
 	var p internal.Position
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	err := h.service.UpdatePosition(p)
 	if err != nil {
-		http.Error(w, "Error: no content!", http.StatusNoContent)
+		http.Error(w, "error: no content", http.StatusNoContent)
 		return
 	}
 	jsonBytes, err := json.Marshal(p)
 	if err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with servere", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusBadRequest)
+		http.Error(w, "error: bad request", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -224,22 +224,22 @@ func (h *Handler) updatePosition(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) updateEmployee(w http.ResponseWriter, r *http.Request) {
 	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	err := h.service.UpdateEmployee(e)
 	if err != nil {
-		http.Error(w, "Error: no content!", http.StatusNoContent)
+		http.Error(w, "error: no content", http.StatusNoContent)
 		return
 	}
 	jsonBytes, err := json.Marshal(e)
 	if err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusBadRequest)
+		http.Error(w, "error: bad request", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -248,16 +248,16 @@ func (h *Handler) deletePosition(w http.ResponseWriter, r *http.Request) {
 	deleteID := positionRe.FindStringSubmatch(r.URL.Path)[1]
 	err := h.service.DeletePosition(deleteID)
 	if err != nil {
-		http.Error(w, "Error: no content", http.StatusNoContent)
+		http.Error(w, "error: no content", http.StatusNoContent)
 	}
 	jsonBytes, err := json.Marshal(deleteID)
 	if err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusBadRequest)
+		http.Error(w, "error: bad request", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -266,16 +266,16 @@ func (h *Handler) deleteEmployee(w http.ResponseWriter, r *http.Request) {
 	deleteID := employeeRe.FindStringSubmatch(r.URL.Path)[1]
 	err := h.service.DeleteEmployee(deleteID)
 	if err != nil {
-		http.Error(w, "Error: no content", http.StatusNoContent)
+		http.Error(w, "error: no content", http.StatusNoContent)
 	}
 	jsonBytes, err := json.Marshal(deleteID)
 	if err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusBadRequest)
+		http.Error(w, "error: bad request", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }

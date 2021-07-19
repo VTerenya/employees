@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-type Handler interface {
+type RepositoryHandler interface {
 	GetPositions() map[string]internal.Position
 	GetEmployees() map[string]internal.Employee
 	AddPosition(p internal.Position)
@@ -13,7 +13,7 @@ type Handler interface {
 }
 
 type Repository struct {
-	Handler
+	RepositoryHandler
 }
 
 func NewRepository(data *database) *Repository {

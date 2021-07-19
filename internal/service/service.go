@@ -6,7 +6,7 @@ import (
 	"github.com/VTerenya/employees/internal/repository"
 )
 
-type Handler interface {
+type ServiceHandler interface {
 	CreatePosition(p internal.Position) error
 	CreateEmployee(e internal.Employee) error
 	GetPositions() []internal.Position
@@ -19,21 +19,19 @@ type Handler interface {
 	UpdateEmployee(e internal.Employee) error
 }
 
+
 type Service struct {
-	Handler
+	ServiceHandler
+	repo *repository.Repository
 }
 
 func NewService(repository *repository.Repository) *Service {
 	return &Service{
-		newTodoService(repository),
+		repo: repository,
 	}
 }
 
-type todoService struct {
-	repo *repository.Repository
-}
-
-func (t todoService) CreatePosition(p internal.Position) error{
+func (t Service) CreatePosition(p internal.Position) error{
 	m := t.repo.GetPositions()
 	for _, value := range m {
 		if value == p {
@@ -44,18 +42,18 @@ func (t todoService) CreatePosition(p internal.Position) error{
 	return nil
 }
 
-func (t todoService) CreateEmployee(e internal.Employee) error{
+func (t Service) CreateEmployee(e internal.Employee) error{
 	m := t.repo.GetEmployees()
 	for _, value := range m {
 		if value == e {
-			return errors.New("create error: no this employee")
+			return errors.New("create error: employee is exists")
 		}
 	}
 	t.repo.AddEmployee(e)
 	return nil
 }
 
-func (t todoService) GetPositions() []internal.Position {
+func (t Service) GetPositions() []internal.Position {
 	m:=t.repo.GetPositions()
 	positions :=make([]internal.Position,0)
 	for _, value := range m {
@@ -64,7 +62,7 @@ func (t todoService) GetPositions() []internal.Position {
 	return positions
 }
 
-func (t todoService) GetEmployees() []internal.Employee {
+func (t Service) GetEmployees() []internal.Employee {
 	m:=t.repo.GetEmployees()
 	employees :=make([]internal.Employee,0)
 	for _, value := range m {
@@ -73,74 +71,72 @@ func (t todoService) GetEmployees() []internal.Employee {
 	return employees
 }
 
-func (t todoService) GetPosition(id string) (internal.Position, error) {
+func (t Service) GetPosition(id string) (internal.Position, error) {
 	m:=t.repo.GetPositions()
 	for _, value := range m{
-		if value.ID == id{
+		if value.(internal.PositionRequest).ID == id{
 			return value, nil
 		}
 	}
-	return internal.Position{}, errors.New("get error: no this position")
+	return internal.PositionResponse{}, errors.New("get error: no this position")
 }
 
-func (t todoService) GetEmployee(id string) (internal.Employee, error) {
+func (t Service) GetEmployee(id string) (internal.Employee, error) {
 	m:=t.repo.GetEmployees()
 	for _, value := range m{
-		if value.ID == id{
+		if value.(internal.EmployeeRequest).ID == id{
 			return value, nil
 		}
 	}
-	return internal.Employee{}, errors.New("get error: no this employee")
+	return internal.EmployeeResponse{}, errors.New("get error: no this employee")
 }
 
-func (t todoService) DeletePosition(id string) error {
+func (t Service) DeletePosition(id string) error {
 	m:=t.repo.GetPositions()
 	for key, value := range m{
-		if value.ID == id{
+		if value.(internal.PositionRequest).ID == id{
 			delete(m, key)
 		}
 	}
 	return errors.New("delete error: no this position")
 }
 
-func (t todoService) DeleteEmployee(id string) error {
+func (t Service) DeleteEmployee(id string) error {
 	m:=t.repo.GetEmployees()
 	for key, value := range m{
-		if value.ID == id{
+		if value.(internal.EmployeeRequest).ID == id{
 			delete(m, key)
 		}
 	}
 	return errors.New("delete error: no this employee")
 }
 
-func (t todoService) UpdatePosition(p internal.Position) error {
+func (t Service) UpdatePosition(p internal.Position) error {
 	m:=t.repo.GetPositions()
+	position := p.(internal.PositionRequest)
 	for _, value := range m{
-		if value.ID == p.ID{
-			value.Name = p.Name
-			value.Salary = p.Salary
+		tempPosition := value.(internal.PositionRequest)
+		if tempPosition.ID == position.ID{
+			tempPosition.Name = position.Name
+			tempPosition.Salary = position.Salary
 			return nil
 		}
 	}
 	return errors.New("update error: no this employee")
 }
 
-func (t todoService) UpdateEmployee(e internal.Employee) error {
+func (t Service) UpdateEmployee(e internal.Employee) error {
 	m:=t.repo.GetEmployees()
+	employee := e.(internal.EmployeeRequest)
 	for _, value := range m{
-		if value.ID == e.ID{
-			value.FirstName = e.FirstName
-			value.LasName = e.LasName
-			value.PositionID = e.PositionID
+		tempEmployee := value.(internal.EmployeeRequest)
+		if tempEmployee.ID == employee.ID{
+			tempEmployee.FirstName = employee.FirstName
+			tempEmployee.LasName = employee.LasName
+			tempEmployee.PositionID = employee.PositionID
 			return nil
 		}
 	}
 	return errors.New("update error: no this employee")
-}
-
-func newTodoService(repository *repository.Repository) *todoService{
-	return &todoService{
-		repo: repository,
-	}
 }
 
