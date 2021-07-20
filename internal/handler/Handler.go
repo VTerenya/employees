@@ -6,15 +6,16 @@ import (
 	"github.com/VTerenya/employees/internal"
 	"github.com/VTerenya/employees/internal/service"
 	"net/http"
+	"net/url"
 	"regexp"
 )
 
 var (
-	positionsRe      = regexp.MustCompile(`^\/positions[\/]*$`)
+	positionsRe      = regexp.MustCompile(`^\/positions\?limit=(\d+)&offset=(\d+)$`)
 	positionRe       = regexp.MustCompile(`^\/position\/(\d+)$`)
 	createPositionRe = regexp.MustCompile(`^\/position$`)
 
-	employeesRe      = regexp.MustCompile(`^\/employees[\/]*$`)
+	employeesRe      = regexp.MustCompile(`^\/employees\?limit=(\d+)&offset=(\d+)$`)
 	employeeRe       = regexp.MustCompile(`^\/employee\/(\d+)$`)
 	createEmployeeRe = regexp.MustCompile(`^\/employee$`)
 )
@@ -66,36 +67,58 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.updateEmployee(w, r)
 		return
 	default:
-		fmt.Println("Error: Not Found!")
+		fmt.Println("error: not found")
 		http.NotFound(w, r)
 		return
 	}
 }
 
 func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
-	positions:=h.service.GetPositions()
+	query, err := url.ParseQuery(r.URL.RawQuery)
+	limit := query["limit"][0]
+	offset := query["offset"][0]
+	if err != nil{
+		http.Error(w, "error with server", http.StatusInternalServerError)
+		return
+	}
+	positions, err :=h.service.GetPositions(limit, offset)
+	if err != nil{
+		http.Error(w, "error with server", http.StatusInternalServerError)
+		return
+	}
 	jsonBytes, err := json.Marshal(positions)
 	if err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) getEmployees(w http.ResponseWriter, r *http.Request) {
-	employees := h.service.GetEmployees()
+	query, err := url.ParseQuery(r.URL.RawQuery)
+	limit := query["limit"][0]
+	offset := query["offset"][0]
+	if err != nil{
+		http.Error(w, "error with server", http.StatusInternalServerError)
+		return
+	}
+	employees, err := h.service.GetEmployees(limit, offset)
+	if err != nil{
+		http.Error(w, "error with server", http.StatusInternalServerError)
+		return
+	}
 	jsonBytes, err := json.Marshal(employees)
 	if err != nil {
-		http.Error(w, "Error with server!", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "Error: bad request", http.StatusInternalServerError)
+		http.Error(w, "error witch server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -111,7 +134,7 @@ func (h *Handler) getPosition(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		_, err := w.Write([]byte("Position not found"))
 		if err != nil {
-			http.Error(w, "Error: bad request", http.StatusBadRequest)
+			http.Error(w, "error: bad request", http.StatusBadRequest)
 		}
 		return
 	}
@@ -122,7 +145,7 @@ func (h *Handler) getPosition(w http.ResponseWriter, r *http.Request) {
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "error: bad request", http.StatusInternalServerError)
+		http.Error(w, "error: with server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -149,7 +172,7 @@ func (h *Handler) getEmployee(w http.ResponseWriter, r *http.Request) {
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "error: bad request", http.StatusInternalServerError)
+		http.Error(w, "error: with server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -171,7 +194,7 @@ func (h *Handler) createPosition(w http.ResponseWriter, r *http.Request) {
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "error: bad request", http.StatusInternalServerError)
+		http.Error(w, "error: with server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -193,7 +216,7 @@ func (h *Handler) createEmployee(w http.ResponseWriter, r *http.Request) {
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "error: bad request", http.StatusInternalServerError)
+		http.Error(w, "error: with server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -211,12 +234,12 @@ func (h *Handler) updatePosition(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonBytes, err := json.Marshal(p)
 	if err != nil {
-		http.Error(w, "error with servere", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "error: bad request", http.StatusInternalServerError)
+		http.Error(w, "error:with server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -239,7 +262,7 @@ func (h *Handler) updateEmployee(w http.ResponseWriter, r *http.Request) {
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "error: bad request", http.StatusInternalServerError)
+		http.Error(w, "error: with server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -257,7 +280,7 @@ func (h *Handler) deletePosition(w http.ResponseWriter, r *http.Request) {
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "error: bad request", http.StatusInternalServerError)
+		http.Error(w, "error: with server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -275,7 +298,7 @@ func (h *Handler) deleteEmployee(w http.ResponseWriter, r *http.Request) {
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "error: bad request", http.StatusInternalServerError)
+		http.Error(w, "error: with server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }

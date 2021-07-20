@@ -13,37 +13,29 @@ type RepositoryHandler interface {
 }
 
 type Repository struct {
-	RepositoryHandler
+	data *database
 }
 
 func NewRepository(data *database) *Repository {
 	return &Repository{
-		NewTodoRepository(data),
+		data,
 	}
 }
 
-type todoRepository struct {
-	data *database
-}
-
-func NewTodoRepository(data *database) *todoRepository {
-	return &todoRepository{data: data}
-}
-
-func (t todoRepository) GetPositions() map[string]internal.Position {
+func (t Repository) GetPositions() map[string]internal.Position {
 	return t.data.GetPosition()
 
 }
 
-func (t todoRepository) GetEmployees() map[string]internal.Employee {
+func (t Repository) GetEmployees() map[string]internal.Employee {
 	return t.data.GetEmployees()
 }
 
-func (t todoRepository) AddPosition(p internal.Position) {
+func (t Repository) AddPosition(p internal.Position) {
 	t.data.GetPosition()[strconv.Itoa(len(t.data.GetPosition())+1)] = p
 }
 
-func (t todoRepository) AddEmployee(e internal.Employee) {
+func (t Repository) AddEmployee(e internal.Employee) {
 	t.data.GetEmployees()[strconv.Itoa(len(t.data.GetEmployees())+1)] = e
 }
 

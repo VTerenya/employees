@@ -4,13 +4,15 @@ import (
 	"errors"
 	"github.com/VTerenya/employees/internal"
 	"github.com/VTerenya/employees/internal/repository"
+	"github.com/google/uuid"
+	"strconv"
 )
 
 type ServiceHandler interface {
 	CreatePosition(p internal.Position) error
 	CreateEmployee(e internal.Employee) error
-	GetPositions() []internal.Position
-	GetEmployees() []internal.Employee
+	GetPositions(limit, offset string) ([]internal.Position,error)
+	GetEmployees(limit, offset string) ([]internal.Employee, error)
 	GetPosition(id string) (internal.Position, error)
 	GetEmployee(id string) (internal.Employee, error)
 	DeletePosition(id string) error
@@ -19,9 +21,7 @@ type ServiceHandler interface {
 	UpdateEmployee(e internal.Employee) error
 }
 
-
 type Service struct {
-	ServiceHandler
 	repo *repository.Repository
 }
 
@@ -31,70 +31,116 @@ func NewService(repository *repository.Repository) *Service {
 	}
 }
 
-func (t Service) CreatePosition(p internal.Position) error{
+func (t Service) CreatePosition(p internal.Position) error {
 	m := t.repo.GetPositions()
 	for _, value := range m {
-		if value == p {
+		if value.Salary == p.Salary && value.Name == p.Name {
 			return errors.New("create error: this position is exists")
 		}
 	}
+	p.ID = uuid.New()
 	t.repo.AddPosition(p)
 	return nil
 }
 
-func (t Service) CreateEmployee(e internal.Employee) error{
+func (t Service) CreateEmployee(e internal.Employee) error {
 	m := t.repo.GetEmployees()
 	for _, value := range m {
-		if value == e {
+		if value.LasName == e.FirstName &&
+			value.FirstName == e.FirstName &&
+			value.PositionID == e.PositionID{
 			return errors.New("create error: employee is exists")
 		}
 	}
+	e.ID = uuid.New()
 	t.repo.AddEmployee(e)
 	return nil
 }
 
-func (t Service) GetPositions() []internal.Position {
-	m:=t.repo.GetPositions()
-	positions :=make([]internal.Position,0)
+func (t Service) GetPositions(limit, offset string) ([]internal.Position,error) {
+	m := t.repo.GetPositions()
+	positions := make([]internal.Position, 0)
 	for _, value := range m {
 		positions = append(positions, value)
 	}
-	return positions
+	intLimit, err := strconv.ParseInt(limit,10, 32)
+	if err!=nil{
+		return nil, err
+	}
+	intOffset, err := strconv.ParseInt(offset,10,32)
+	if err != nil{
+		return nil, err
+	}
+	if len(positions)/int(intLimit) >= int(intOffset){
+		return nil, errors.New("incorrect data")
+	}
+	answer := make([]internal.Position, 0)
+	for i := len(positions)/int(intLimit)*5; i < len(positions)/int(intLimit)*5 + int(intLimit); i++ {
+		answer = append(answer, positions[i])
+	}
+	return answer, nil
 }
 
-func (t Service) GetEmployees() []internal.Employee {
-	m:=t.repo.GetEmployees()
-	employees :=make([]internal.Employee,0)
+func (t Service) GetEmployees(limit, offset string) ([]internal.Employee,error) {
+	m := t.repo.GetEmployees()
+	employees := make([]internal.Employee, 0)
 	for _, value := range m {
 		employees = append(employees, value)
 	}
-	return employees
+	intLimit, err := strconv.ParseInt(limit,10, 32)
+	if err!=nil{
+		return nil, err
+	}
+	intOffset, err := strconv.ParseInt(offset,10,32)
+	if err != nil{
+		return nil, err
+	}
+	if len(employees)/int(intLimit) >= int(intOffset){
+		return nil, errors.New("incorrect data")
+	}
+	answer := make([]internal.Employee, 0)
+	for i := len(employees)/int(intLimit)*5; i < len(employees)/int(intLimit)*5 + int(intLimit); i++ {
+		answer = append(answer, employees[i])
+	}
+	return answer, nil
 }
 
 func (t Service) GetPosition(id string) (internal.Position, error) {
-	m:=t.repo.GetPositions()
-	for _, value := range m{
-		if value.(internal.PositionRequest).ID == id{
+	m := t.repo.GetPositions()
+	uId, err := uuid.Parse(id)
+	if err != nil {
+		return internal.Position{}, err
+	}
+	for _, value := range m {
+		if value.ID == uId {
 			return value, nil
 		}
 	}
-	return internal.PositionResponse{}, errors.New("get error: no this position")
+	return internal.Position{}, errors.New("get error: no this position")
 }
 
 func (t Service) GetEmployee(id string) (internal.Employee, error) {
-	m:=t.repo.GetEmployees()
-	for _, value := range m{
-		if value.(internal.EmployeeRequest).ID == id{
+	m := t.repo.GetEmployees()
+	uId, err := uuid.Parse(id)
+	if err != nil {
+		return internal.Employee{}, err
+	}
+	for _, value := range m {
+		if value.ID == uId {
 			return value, nil
 		}
 	}
-	return internal.EmployeeResponse{}, errors.New("get error: no this employee")
+	return internal.Employee{}, errors.New("get error: no this employee")
 }
 
 func (t Service) DeletePosition(id string) error {
-	m:=t.repo.GetPositions()
-	for key, value := range m{
-		if value.(internal.PositionRequest).ID == id{
+	m := t.repo.GetPositions()
+	uId, err := uuid.Parse(id)
+	if err != nil {
+		return err
+	}
+	for key, value := range m {
+		if value.ID == uId {
 			delete(m, key)
 		}
 	}
@@ -102,9 +148,13 @@ func (t Service) DeletePosition(id string) error {
 }
 
 func (t Service) DeleteEmployee(id string) error {
-	m:=t.repo.GetEmployees()
-	for key, value := range m{
-		if value.(internal.EmployeeRequest).ID == id{
+	m := t.repo.GetEmployees()
+	uId, err := uuid.Parse(id)
+	if err != nil {
+		return err
+	}
+	for key, value := range m {
+		if value.ID == uId {
 			delete(m, key)
 		}
 	}
@@ -112,13 +162,11 @@ func (t Service) DeleteEmployee(id string) error {
 }
 
 func (t Service) UpdatePosition(p internal.Position) error {
-	m:=t.repo.GetPositions()
-	position := p.(internal.PositionRequest)
-	for _, value := range m{
-		tempPosition := value.(internal.PositionRequest)
-		if tempPosition.ID == position.ID{
-			tempPosition.Name = position.Name
-			tempPosition.Salary = position.Salary
+	m := t.repo.GetPositions()
+	for _, value := range m {
+		if value.ID == p.ID {
+			value.Name = p.Name
+			value.Salary = p.Salary
 			return nil
 		}
 	}
@@ -126,17 +174,14 @@ func (t Service) UpdatePosition(p internal.Position) error {
 }
 
 func (t Service) UpdateEmployee(e internal.Employee) error {
-	m:=t.repo.GetEmployees()
-	employee := e.(internal.EmployeeRequest)
-	for _, value := range m{
-		tempEmployee := value.(internal.EmployeeRequest)
-		if tempEmployee.ID == employee.ID{
-			tempEmployee.FirstName = employee.FirstName
-			tempEmployee.LasName = employee.LasName
-			tempEmployee.PositionID = employee.PositionID
+	m := t.repo.GetEmployees()
+	for _, value := range m {
+		if value.ID == e.ID {
+			value.FirstName = e.FirstName
+			value.LasName = e.LasName
+			value.PositionID = e.PositionID
 			return nil
 		}
 	}
 	return errors.New("update error: no this employee")
 }
-

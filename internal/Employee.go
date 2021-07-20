@@ -1,17 +1,9 @@
 package internal
 
-type Employee interface{}
+import "github.com/google/uuid"
 
-type EmployeeResponse struct {
-	Employee
-	FirstName  string    `json:"firstName"`
-	LasName    string    `json:"lasName"`
-	PositionID *Position `json:"position"`
-}
-
-type EmployeeRequest struct {
-	Employee
-	ID         string    `json:"id"`
+type Employee struct {
+	ID         uuid.UUID    `json:"id"`
 	FirstName  string    `json:"firstName"`
 	LasName    string    `json:"lasName"`
 	PositionID *Position `json:"position"`
