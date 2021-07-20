@@ -5,14 +5,13 @@ import (
 	"github.com/VTerenya/employees/internal"
 	"github.com/VTerenya/employees/internal/repository"
 	"github.com/google/uuid"
-	"strconv"
 )
 
 type ServiceHandler interface {
 	CreatePosition(p internal.Position) error
 	CreateEmployee(e internal.Employee) error
-	GetPositions(limit, offset string) ([]internal.Position,error)
-	GetEmployees(limit, offset string) ([]internal.Employee, error)
+	GetPositions(limit, offset int) ([]internal.Position, error)
+	GetEmployees(limit, offset int) ([]internal.Employee, error)
 	GetPosition(id string) (internal.Position, error)
 	GetEmployee(id string) (internal.Employee, error)
 	DeletePosition(id string) error
@@ -47,8 +46,7 @@ func (t Service) CreateEmployee(e internal.Employee) error {
 	m := t.repo.GetEmployees()
 	for _, value := range m {
 		if value.LasName == e.FirstName &&
-			value.FirstName == e.FirstName &&
-			value.PositionID == e.PositionID{
+			value.FirstName == e.FirstName {
 			return errors.New("create error: employee is exists")
 		}
 	}
@@ -57,49 +55,33 @@ func (t Service) CreateEmployee(e internal.Employee) error {
 	return nil
 }
 
-func (t Service) GetPositions(limit, offset string) ([]internal.Position,error) {
+func (t Service) GetPositions(limit, offset int) ([]internal.Position, error) {
 	m := t.repo.GetPositions()
 	positions := make([]internal.Position, 0)
 	for _, value := range m {
 		positions = append(positions, value)
 	}
-	intLimit, err := strconv.ParseInt(limit,10, 32)
-	if err!=nil{
-		return nil, err
-	}
-	intOffset, err := strconv.ParseInt(offset,10,32)
-	if err != nil{
-		return nil, err
-	}
-	if len(positions)/int(intLimit) >= int(intOffset){
+	if len(positions)/limit >= offset || limit < 0 || offset < 0 {
 		return nil, errors.New("incorrect data")
 	}
 	answer := make([]internal.Position, 0)
-	for i := len(positions)/int(intLimit)*5; i < len(positions)/int(intLimit)*5 + int(intLimit); i++ {
+	for i := len(positions)/limit * offset; i < len(positions)/limit*offset+limit; i++ {
 		answer = append(answer, positions[i])
 	}
 	return answer, nil
 }
 
-func (t Service) GetEmployees(limit, offset string) ([]internal.Employee,error) {
+func (t Service) GetEmployees(limit, offset int) ([]internal.Employee, error) {
 	m := t.repo.GetEmployees()
 	employees := make([]internal.Employee, 0)
 	for _, value := range m {
 		employees = append(employees, value)
 	}
-	intLimit, err := strconv.ParseInt(limit,10, 32)
-	if err!=nil{
-		return nil, err
-	}
-	intOffset, err := strconv.ParseInt(offset,10,32)
-	if err != nil{
-		return nil, err
-	}
-	if len(employees)/int(intLimit) >= int(intOffset){
+	if len(employees)/limit >= offset {
 		return nil, errors.New("incorrect data")
 	}
 	answer := make([]internal.Employee, 0)
-	for i := len(employees)/int(intLimit)*5; i < len(employees)/int(intLimit)*5 + int(intLimit); i++ {
+	for i := len(employees) / limit * 5; i < len(employees)/limit*5+limit; i++ {
 		answer = append(answer, employees[i])
 	}
 	return answer, nil
