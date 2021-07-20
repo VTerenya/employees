@@ -42,8 +42,19 @@ paths:
       operationId: getAll
       description: Return a books list
       parameters:
-        - $ref: "#/parameters/skip_param"
-        - $ref: "#/parameters/limit_param"
+        - name: skip
+          in: query
+          schema:
+            type: integer
+          required: true
+          description: number of items to skip
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          required: true
+          description: max param to return
+
       responses:
         '200':
           description: Success
@@ -168,8 +179,18 @@ paths:
     get:
       description: return a position list
       parameters:
-        - $ref: '#/parameters/skip_param'
-        - $ref: '#/parameters/limit_param'
+        - name: skip
+          in: query
+          schema:
+            type: integer
+          required: true
+          description: number of items to skip
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          required: true
+          description: max param to return
       responses:
         '200':
           description: Success
@@ -275,18 +296,23 @@ components:
           type: string
         last_name:
           type: string
-        uuid:
+        id:
           type: string
+          format: uuid
         position_id:
-          type: string
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/position"
     position:
       properties:
         name:
           type: string
         salary:
           type: number
-        uuid:
+          format: double
+        id:
           type: string
+          format: uuid
     employees:
       properties:
         paging:
@@ -345,22 +371,3 @@ components:
       description: Bad request
     unsupported_type:
       description: Unsupported media type
-
-parameters:
-  skip_param:
-    name: skip
-    in: query
-    description: number of items to skip
-    required: false
-    type: integer
-    format: int32
-    minimum: 0
-  limit_param:
-    name: limit
-    in: query
-    description: max param to return
-    required: false
-    type: integer
-    format: int32
-    maximum: 100
-    minimum: 0
