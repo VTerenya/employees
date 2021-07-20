@@ -118,7 +118,7 @@ func (h *Handler) getEmployees(w http.ResponseWriter, r *http.Request) {
 	}
 	_, er := w.Write(jsonBytes)
 	if er != nil {
-		http.Error(w, "error witch server", http.StatusInternalServerError)
+		http.Error(w, "error with server", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 }
