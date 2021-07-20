@@ -89,7 +89,7 @@ func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
 	positions, err := h.service.GetPositions(int(limit), int(offset))
 	if err != nil {
 		if err.Error() == "incorrect data"{
-			http.Error(w, "error: bar request", http.StatusBadRequest)
+			http.Error(w, "error: not found", http.StatusNotFound)
 			return
 		}else {
 			http.Error(w, "error with server", http.StatusInternalServerError)
@@ -123,7 +123,7 @@ func (h *Handler) getEmployees(w http.ResponseWriter, r *http.Request) {
 	employees, err := h.service.GetEmployees(int(limit), int(offset))
 	if err != nil {
 		if err.Error() == "incorrect data"{
-			http.Error(w, "error: bar request", http.StatusBadRequest)
+			http.Error(w, "error: not found", http.StatusNotFound)
 			return
 		}else {
 			http.Error(w, "error with server", http.StatusInternalServerError)
