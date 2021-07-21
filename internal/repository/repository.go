@@ -2,7 +2,6 @@ package repository
 
 import (
 	"github.com/VTerenya/employees/internal"
-	"strconv"
 )
 
 type RepositoryHandler interface {
@@ -32,11 +31,11 @@ func (t Repository) GetEmployees() map[string]internal.Employee {
 }
 
 func (t Repository) AddPosition(p internal.Position) {
-	t.data.GetPosition()[strconv.Itoa(len(t.data.GetPosition())+1)] = p
+	t.data.GetPosition()[p.ID.String()] = p
 }
 
 func (t Repository) AddEmployee(e internal.Employee) {
-	t.data.GetEmployees()[strconv.Itoa(len(t.data.GetEmployees())+1)] = e
+	t.data.GetEmployees()[e.ID.String()] = e
 }
 
 type database struct {

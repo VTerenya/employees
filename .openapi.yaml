@@ -294,12 +294,12 @@ components:
       properties:
         first_name:
           type: string
-        last_name:
+        las_name:
           type: string
         id:
           type: string
           format: uuid
-        position_id:
+        position:
           type: object
           allOf:
             - $ref: "#/components/schemas/position"
@@ -308,8 +308,7 @@ components:
         name:
           type: string
         salary:
-          type: number
-          format: double
+          type: string
         id:
           type: string
           format: uuid

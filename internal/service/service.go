@@ -161,7 +161,7 @@ func (t Service) UpdateEmployee(e internal.Employee) error {
 		if value.ID == e.ID {
 			value.FirstName = e.FirstName
 			value.LasName = e.LasName
-			value.PositionID = e.PositionID
+			value.Position = e.Position
 			return nil
 		}
 	}
