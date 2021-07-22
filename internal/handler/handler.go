@@ -22,11 +22,11 @@ var (
 )
 
 type Handler struct {
-	service service.ServiceHandler
+	service service.Serv
 }
 
-func NewHandler(ser *service.Service) *Handler {
-	return &Handler{service: ser}
+func NewHandler(service service.Serv) *Handler {
+	return &Handler{service: service}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +75,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
 	query, err := url.ParseQuery(r.URL.RawQuery)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
@@ -94,10 +94,9 @@ func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
 		if err.Error() == "incorrect data" {
 			http.Error(w, "error: not found", http.StatusNotFound)
 			return
-		} else {
-			http.Error(w, "error with server", http.StatusInternalServerError)
-			return
 		}
+		http.Error(w, "error with server", http.StatusInternalServerError)
+		return
 	}
 	jsonBytes, err := json.Marshal(positions)
 	if err != nil {
@@ -113,7 +112,7 @@ func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) getEmployees(w http.ResponseWriter, r *http.Request) {
 	query, err := url.ParseQuery(r.URL.RawQuery)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
@@ -133,10 +132,9 @@ func (h *Handler) getEmployees(w http.ResponseWriter, r *http.Request) {
 		if err.Error() == "incorrect data" {
 			http.Error(w, "error: not found", http.StatusNotFound)
 			return
-		} else {
-			http.Error(w, "error with server", http.StatusInternalServerError)
-			return
 		}
+		http.Error(w, "error with server", http.StatusInternalServerError)
+		return
 	}
 	jsonBytes, err := json.Marshal(employees)
 	if err != nil {

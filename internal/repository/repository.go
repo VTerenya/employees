@@ -4,7 +4,7 @@ import (
 	"github.com/VTerenya/employees/internal"
 )
 
-type RepositoryHandler interface {
+type Repo interface {
 	GetPositions() map[string]internal.Position
 	GetEmployees() map[string]internal.Employee
 	AddPosition(p internal.Position)
@@ -12,10 +12,10 @@ type RepositoryHandler interface {
 }
 
 type Repository struct {
-	data *database
+	data *Database
 }
 
-func NewRepository(data *database) *Repository {
+func NewRepository(data *Database) *Repository {
 	return &Repository{
 		data,
 	}
@@ -23,7 +23,6 @@ func NewRepository(data *database) *Repository {
 
 func (t Repository) GetPositions() map[string]internal.Position {
 	return t.data.GetPosition()
-
 }
 
 func (t Repository) GetEmployees() map[string]internal.Employee {
@@ -38,22 +37,22 @@ func (t Repository) AddEmployee(e *internal.Employee) {
 	t.data.GetEmployees()[e.ID.String()] = *e
 }
 
-type database struct {
+type Database struct {
 	employees map[string]internal.Employee
 	positions map[string]internal.Position
 }
 
-func NewDataBase() *database {
-	return &database{
+func NewDataBase() *Database {
+	return &Database{
 		employees: map[string]internal.Employee{},
 		positions: map[string]internal.Position{},
 	}
 }
 
-func (d database) GetEmployees() map[string]internal.Employee {
+func (d Database) GetEmployees() map[string]internal.Employee {
 	return d.employees
 }
 
-func (d database) GetPosition() map[string]internal.Position {
+func (d Database) GetPosition() map[string]internal.Position {
 	return d.positions
 }

@@ -12,7 +12,7 @@ func main() {
 	mux := http.NewServeMux()
 	myData := repository.NewDataBase()
 	myRepo := repository.NewRepository(myData)
-	myServ:= service.NewService(myRepo)
+	myServ := service.NewService(myRepo)
 	myH := handler.NewHandler(myServ)
 	mux.Handle("/positions", myH)
 	mux.Handle("/position/", myH)
@@ -22,6 +22,6 @@ func main() {
 	mux.Handle("/employee", myH)
 	err := http.ListenAndServe("localhost:8080", mux)
 	if err != nil {
-		 log.Fatal(err)
+		log.Fatal(err)
 	}
 }

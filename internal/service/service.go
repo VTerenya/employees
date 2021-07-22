@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type ServiceHandler interface {
+type Serv interface {
 	CreatePosition(p *internal.Position) error
 	CreateEmployee(e *internal.Employee) error
 	GetPositions(limit, offset int) ([]internal.Position, error)
@@ -61,16 +61,16 @@ func (t Service) GetPositions(limit, offset int) ([]internal.Position, error) {
 	for _, value := range m {
 		positions = append(positions, value)
 	}
-	offset-=1
-	if float64(len(positions))/float64(limit) <float64(offset) || limit <1 || offset <0{
+	offset--
+	if float64(len(positions))/float64(limit) < float64(offset) || limit < 1 || offset < 0 {
 		return nil, errors.New("incorrect data")
 	}
 	var answer []internal.Position
-	if len(positions) == 0{
-		return answer,nil
+	if len(positions) == 0 {
+		return answer, nil
 	}
 
-	for i := limit*offset; i < limit*offset+limit && i < len(positions); i++ {
+	for i := limit * offset; i < limit*offset+limit && i < len(positions); i++ {
 		answer = append(answer, positions[i])
 	}
 	return answer, nil
@@ -82,15 +82,15 @@ func (t Service) GetEmployees(limit, offset int) ([]internal.Employee, error) {
 	for _, value := range m {
 		employees = append(employees, value)
 	}
-	offset-=1
-	if float64(len(employees))/float64(limit) <float64(offset) || limit <1 || offset <0{
+	offset--
+	if float64(len(employees))/float64(limit) < float64(offset) || limit < 1 || offset < 0 {
 		return nil, errors.New("incorrect data")
 	}
 	var answer []internal.Employee
-	if len(employees) == 0{
-		return answer,nil
+	if len(employees) == 0 {
+		return answer, nil
 	}
-	for i := limit*offset; i < limit*offset+limit && i < len(employees); i++ {
+	for i := limit * offset; i < limit*offset+limit && i < len(employees); i++ {
 		answer = append(answer, employees[i])
 	}
 	return answer, nil
@@ -98,12 +98,12 @@ func (t Service) GetEmployees(limit, offset int) ([]internal.Employee, error) {
 
 func (t Service) GetPosition(id string) (internal.Position, error) {
 	m := t.repo.GetPositions()
-	uId, err := uuid.Parse(id)
+	uID, err := uuid.Parse(id)
 	if err != nil {
 		return internal.Position{}, err
 	}
 	for _, value := range m {
-		if value.ID == uId {
+		if value.ID == uID {
 			return value, nil
 		}
 	}
@@ -112,12 +112,12 @@ func (t Service) GetPosition(id string) (internal.Position, error) {
 
 func (t Service) GetEmployee(id string) (internal.Employee, error) {
 	m := t.repo.GetEmployees()
-	uId, err := uuid.Parse(id)
+	uID, err := uuid.Parse(id)
 	if err != nil {
 		return internal.Employee{}, err
 	}
 	for _, value := range m {
-		if value.ID == uId {
+		if value.ID == uID {
 			return value, nil
 		}
 	}
@@ -126,12 +126,12 @@ func (t Service) GetEmployee(id string) (internal.Employee, error) {
 
 func (t Service) DeletePosition(id string) error {
 	m := t.repo.GetPositions()
-	uId, err := uuid.Parse(id)
+	uID, err := uuid.Parse(id)
 	if err != nil {
 		return err
 	}
 	for key, value := range m {
-		if value.ID == uId {
+		if value.ID == uID {
 			delete(m, key)
 		}
 	}
@@ -140,12 +140,12 @@ func (t Service) DeletePosition(id string) error {
 
 func (t Service) DeleteEmployee(id string) error {
 	m := t.repo.GetEmployees()
-	uId, err := uuid.Parse(id)
+	uID, err := uuid.Parse(id)
 	if err != nil {
 		return err
 	}
 	for key, value := range m {
-		if value.ID == uId {
+		if value.ID == uID {
 			delete(m, key)
 		}
 	}
