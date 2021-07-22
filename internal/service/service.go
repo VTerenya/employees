@@ -8,8 +8,8 @@ import (
 )
 
 type ServiceHandler interface {
-	CreatePosition(p internal.Position) error
-	CreateEmployee(e internal.Employee) error
+	CreatePosition(p *internal.Position) error
+	CreateEmployee(e *internal.Employee) error
 	GetPositions(limit, offset int) ([]internal.Position, error)
 	GetEmployees(limit, offset int) ([]internal.Employee, error)
 	GetPosition(id string) (internal.Position, error)
@@ -30,7 +30,7 @@ func NewService(repository *repository.Repository) *Service {
 	}
 }
 
-func (t Service) CreatePosition(p internal.Position) error {
+func (t Service) CreatePosition(p *internal.Position) error {
 	m := t.repo.GetPositions()
 	for _, value := range m {
 		if value.Salary == p.Salary && value.Name == p.Name {
@@ -42,10 +42,10 @@ func (t Service) CreatePosition(p internal.Position) error {
 	return nil
 }
 
-func (t Service) CreateEmployee(e internal.Employee) error {
+func (t Service) CreateEmployee(e *internal.Employee) error {
 	m := t.repo.GetEmployees()
 	for _, value := range m {
-		if value.LasName == e.FirstName &&
+		if value.LasName == e.LasName &&
 			value.FirstName == e.FirstName {
 			return errors.New("create error: employee is exists")
 		}
@@ -61,11 +61,16 @@ func (t Service) GetPositions(limit, offset int) ([]internal.Position, error) {
 	for _, value := range m {
 		positions = append(positions, value)
 	}
-	if len(positions)/limit >= offset || limit < 0 || offset < 0 {
+	offset-=1
+	if float64(len(positions))/float64(limit) <float64(offset) || limit <1 || offset <0{
 		return nil, errors.New("incorrect data")
 	}
-	answer := make([]internal.Position, 0)
-	for i := len(positions)/limit * offset; i < len(positions)/limit*offset+limit; i++ {
+	var answer []internal.Position
+	if len(positions) == 0{
+		return answer,nil
+	}
+
+	for i := limit*offset; i < limit*offset+limit && i < len(positions); i++ {
 		answer = append(answer, positions[i])
 	}
 	return answer, nil
@@ -77,11 +82,15 @@ func (t Service) GetEmployees(limit, offset int) ([]internal.Employee, error) {
 	for _, value := range m {
 		employees = append(employees, value)
 	}
-	if len(employees)/limit >= offset {
+	offset-=1
+	if float64(len(employees))/float64(limit) <float64(offset) || limit <1 || offset <0{
 		return nil, errors.New("incorrect data")
 	}
-	answer := make([]internal.Employee, 0)
-	for i := len(employees) / limit * 5; i < len(employees)/limit*5+limit; i++ {
+	var answer []internal.Employee
+	if len(employees) == 0{
+		return answer,nil
+	}
+	for i := limit*offset; i < limit*offset+limit && i < len(employees); i++ {
 		answer = append(answer, employees[i])
 	}
 	return answer, nil

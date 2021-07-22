@@ -7,7 +7,7 @@ paths:
   /auth:
     post:
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       description: "Authorization user"
       requestBody:
         required: true
@@ -42,12 +42,12 @@ paths:
       operationId: getAll
       description: Return a books list
       parameters:
-        - name: skip
+        - name: offset
           in: query
           schema:
             type: integer
           required: true
-          description: number of items to skip
+          description: number of skipped groups
         - name: limit
           in: query
           schema:
@@ -68,8 +68,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/responses/not_found_error"
-        '429':
-          description: Too many requests
+        '500':
+          description: "internal server error"
   /employee/{id}:
     delete:
       description: "delete employee by id"
@@ -82,12 +82,18 @@ paths:
       responses:
         '204':
           description: "No Content"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/employee"
         '404':
           description: "Page not found"
           content:
             application/json:
               schema:
                 $ref: "#/components/responses/not_found_error"
+        '500':
+          description: "Internal server error"
   /employee:
     get:
       description: Get an employee
@@ -104,13 +110,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/responses/not_found_error"
-        '429':
-          description: Too many requests
         '500':
           description: Enternal Server Error.
     post:
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       description: Create employee
       requestBody:
         required: true
@@ -119,12 +123,18 @@ paths:
             schema:
               $ref: "#/components/schemas/employee"
       responses:
-        '200':
-          description: "Successfully"
+        '201':
+          description: "Created"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/success"
+                $ref: "#/components/schemas/uuid"
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/bad_request"
         '401':
           description: "Unauthorization"
           content:
@@ -142,7 +152,7 @@ paths:
     put:
       description: "update employee"
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         required: true
         content:
@@ -153,38 +163,33 @@ paths:
                 - required:
                     - update_firstName
                     - update_lasName
-                    - update_uuid
                     - update_position_id
       responses:
-        '201':
-          description: "Ok"
+        '200':
+          description: "Success"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/employee"
-        '404':
-          description: "Page not found"
+        '204':
+          description: "No content"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/not_found_error"
-        '415':
-          description: "Unsupported media type"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/responses/unsupported_type"
+                $ref: "#/components/responses/no_content"
+        '500':
+          description: "Internal server error"
 
   /positions:
     get:
       description: return a position list
       parameters:
-        - name: skip
+        - name: offset
           in: query
           schema:
             type: integer
           required: true
-          description: number of items to skip
+          description: number of skipped groups
         - name: limit
           in: query
           schema:
@@ -204,8 +209,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/responses/not_found_error"
-        '429':
-          description: Too many requests
+        '500':
+          description: Enternal Server Error.
   /position:
     get:
       description: Get an position
@@ -216,9 +221,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/position'
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/not_found_error"
+        '500':
+          description: Enternal Server Error.
     post:
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       description: Create position
       requestBody:
         required: true
@@ -229,11 +242,34 @@ paths:
       responses:
         '201':
           description: "Created"
-
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/uuid"
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/bad_request"
+        '401':
+          description: "Unauthorization"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/unauthorized_error"
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/not_found_error"
+        '500':
+          description: Enternal Server Error.
     put:
       description: "update position"
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         required: true
         content:
@@ -244,26 +280,21 @@ paths:
                 - required:
                     - update_name
                     - update_salary
-                    - update_uuid
       responses:
-        '201':
-          description: "Ok"
+        '200':
+          description: "Success"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/position"
-        '404':
-          description: "Page not found"
+        '204':
+          description: "No content"
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/not_found_error"
-        '415':
-          description: "Unsupported media type"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/responses/unsupported_type"
+                $ref: "#/components/responses/no_content"
+        '500':
+          description: "Internal server error"
   /position/{id}:
     delete:
       description: "delete position by id"
@@ -276,12 +307,18 @@ paths:
       responses:
         '204':
           description: "No Content"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/position"
         '404':
           description: "Page not found"
           content:
             application/json:
               schema:
                 $ref: "#/components/responses/not_found_error"
+        '500':
+          description: "Internal server error"
 components:
   schemas:
     user:
@@ -289,6 +326,10 @@ components:
         login:
           type: string
         password:
+          type: string
+    uuid:
+      properties:
+        id:
           type: string
     employee:
       properties:
@@ -300,9 +341,7 @@ components:
           type: string
           format: uuid
         position:
-          type: object
-          allOf:
-            - $ref: "#/components/schemas/position"
+          type: string
     position:
       properties:
         name:

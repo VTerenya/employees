@@ -30,12 +30,12 @@ func (t Repository) GetEmployees() map[string]internal.Employee {
 	return t.data.GetEmployees()
 }
 
-func (t Repository) AddPosition(p internal.Position) {
-	t.data.GetPosition()[p.ID.String()] = p
+func (t Repository) AddPosition(p *internal.Position) {
+	t.data.GetPosition()[p.ID.String()] = *p
 }
 
-func (t Repository) AddEmployee(e internal.Employee) {
-	t.data.GetEmployees()[e.ID.String()] = e
+func (t Repository) AddEmployee(e *internal.Employee) {
+	t.data.GetEmployees()[e.ID.String()] = *e
 }
 
 type database struct {
