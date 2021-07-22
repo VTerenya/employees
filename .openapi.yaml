@@ -103,7 +103,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/employee'
+                $ref: "#/components/schemas/employee"
         '404':
           description: "Page not found"
           content:
@@ -121,7 +121,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/employee"
+              type: object
+              properties:
+                first_name:
+                  type: string
+                las_name:
+                  type: string
+                position:
+                  type: string
       responses:
         '201':
           description: "Created"
@@ -238,7 +245,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/position"
+              type: object
+              properties:
+                name:
+                  type: string
+                salary:
+                  type: string
       responses:
         '201':
           description: "Created"
