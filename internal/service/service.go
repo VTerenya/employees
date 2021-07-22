@@ -2,9 +2,12 @@ package service
 
 import (
 	"errors"
+	"fmt"
+
+	"github.com/google/uuid"
+
 	"github.com/VTerenya/employees/internal"
 	"github.com/VTerenya/employees/internal/repository"
-	"github.com/google/uuid"
 )
 
 type Serv interface {
@@ -16,8 +19,8 @@ type Serv interface {
 	GetEmployee(id string) (internal.Employee, error)
 	DeletePosition(id string) error
 	DeleteEmployee(id string) error
-	UpdatePosition(p internal.Position) error
-	UpdateEmployee(e internal.Employee) error
+	UpdatePosition(p *internal.Position) error
+	UpdateEmployee(e *internal.Employee) error
 }
 
 type Service struct {
@@ -152,27 +155,27 @@ func (t Service) DeleteEmployee(id string) error {
 	return errors.New("delete error: no this employee")
 }
 
-func (t Service) UpdatePosition(p internal.Position) error {
+func (t Service) UpdatePosition(p *internal.Position) error {
 	m := t.repo.GetPositions()
-	for _, value := range m {
-		if value.ID == p.ID {
-			value.Name = p.Name
-			value.Salary = p.Salary
-			return nil
-		}
+	if p.ID.String() == "00000000-0000-0000-0000-000000000000" {
+		return errors.New("error incorrect input")
+	}
+	if _, ok := m[p.ID.String()]; ok {
+		delete(m, p.ID.String())
+		t.repo.AddPosition(p)
 	}
 	return errors.New("update error: no this employee")
 }
 
-func (t Service) UpdateEmployee(e internal.Employee) error {
+func (t Service) UpdateEmployee(e *internal.Employee) error {
 	m := t.repo.GetEmployees()
-	for _, value := range m {
-		if value.ID == e.ID {
-			value.FirstName = e.FirstName
-			value.LasName = e.LasName
-			value.Position = e.Position
-			return nil
-		}
+	fmt.Println(e.ID.String())
+	if e.ID.String() == "00000000-0000-0000-0000-000000000000" {
+		return errors.New("error incorrect input")
+	}
+	if _, ok := m[e.ID.String()]; ok {
+		delete(m, e.ID.String())
+		t.repo.AddEmployee(e)
 	}
 	return errors.New("update error: no this employee")
 }

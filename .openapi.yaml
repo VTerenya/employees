@@ -184,6 +184,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/responses/no_content"
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/bad_request"
         '500':
           description: "Internal server error"
 
@@ -250,7 +256,7 @@ paths:
                 name:
                   type: string
                 salary:
-                  type: string
+                  type: number
       responses:
         '201':
           description: "Created"
@@ -305,6 +311,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/responses/no_content"
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/bad_request"
         '500':
           description: "Internal server error"
   /position/{id}:
@@ -359,7 +371,7 @@ components:
         name:
           type: string
         salary:
-          type: string
+          type: number
         id:
           type: string
           format: uuid

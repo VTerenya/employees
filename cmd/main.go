@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/VTerenya/employees/internal/handler"
 	"github.com/VTerenya/employees/internal/repository"
 	"github.com/VTerenya/employees/internal/service"
-	"log"
-	"net/http"
 )
 
 func main() {

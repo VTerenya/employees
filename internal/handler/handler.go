@@ -3,21 +3,23 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/VTerenya/employees/internal"
-	"github.com/VTerenya/employees/internal/service"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
+
+	"github.com/VTerenya/employees/internal"
+	"github.com/VTerenya/employees/internal/service"
+	"github.com/shopspring/decimal"
 )
 
 var (
 	positionsRe      = regexp.MustCompile(`[\\/]positions\?limit=(\d+)&offset=(\d+)$`)
-	positionRe       = regexp.MustCompile(`[\\/]position[\\/](\s+)$`)
+	positionRe       = regexp.MustCompile(`[\\/]position[\\/](\S+)$`)
 	createPositionRe = regexp.MustCompile(`[\\/]position$`)
 
 	employeesRe      = regexp.MustCompile(`[\\/]employees\?limit=(\d+)&offset=(\d+)$`)
-	employeeRe       = regexp.MustCompile(`[\\/]employee[\\/](\s+)$`)
+	employeeRe       = regexp.MustCompile(`[\\/]employee[\\/](\S+)$`)
 	createEmployeeRe = regexp.MustCompile(`[\\/]employee$`)
 )
 
@@ -183,7 +185,7 @@ func (h *Handler) getEmployee(w http.ResponseWriter, r *http.Request) {
 	}
 	e, err := h.service.GetEmployee(matches[1])
 	if err != nil {
-		if err.Error() == "get error: no this position" {
+		if err.Error() == "get error: no this employee" {
 			http.Error(w, "error: not found", http.StatusNotFound)
 			return
 		}
@@ -208,7 +210,7 @@ func (h *Handler) createPosition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
-	if p.Salary == "" || p.Name == "" {
+	if p.Salary == decimal.New(0, 0) || p.Name == "" {
 		http.Error(w, "error with request", http.StatusBadRequest)
 		return
 	}
@@ -262,8 +264,12 @@ func (h *Handler) updatePosition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
-	err := h.service.UpdatePosition(p)
+	err := h.service.UpdatePosition(&p)
 	if err != nil {
+		if err.Error() == "error incorrect input" {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, "error: no content", http.StatusNoContent)
 		return
 	}
@@ -285,8 +291,12 @@ func (h *Handler) updateEmployee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error with server", http.StatusInternalServerError)
 		return
 	}
-	err := h.service.UpdateEmployee(e)
+	err := h.service.UpdateEmployee(&e)
 	if err != nil {
+		if err.Error() == "error incorrect input" {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, "error: no content", http.StatusNoContent)
 		return
 	}
