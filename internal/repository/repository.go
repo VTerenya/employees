@@ -4,36 +4,36 @@ import (
 	"github.com/VTerenya/employees/internal"
 )
 
-type Repo interface {
+type Repository interface {
 	GetPositions() map[string]internal.Position
 	GetEmployees() map[string]internal.Employee
 	AddPosition(p internal.Position)
 	AddEmployee(e internal.Employee)
 }
 
-type Repository struct {
+type Repo struct {
 	data *Database
 }
 
-func NewRepository(data *Database) *Repository {
-	return &Repository{
+func NewRepo(data *Database) *Repo {
+	return &Repo{
 		data,
 	}
 }
 
-func (t Repository) GetPositions() map[string]internal.Position {
+func (t Repo) GetPositions() map[string]internal.Position {
 	return t.data.GetPosition()
 }
 
-func (t Repository) GetEmployees() map[string]internal.Employee {
+func (t Repo) GetEmployees() map[string]internal.Employee {
 	return t.data.GetEmployees()
 }
 
-func (t Repository) AddPosition(p *internal.Position) {
+func (t Repo) AddPosition(p *internal.Position) {
 	t.data.GetPosition()[p.ID.String()] = *p
 }
 
-func (t Repository) AddEmployee(e *internal.Employee) {
+func (t Repo) AddEmployee(e *internal.Employee) {
 	t.data.GetEmployees()[e.ID.String()] = *e
 }
 

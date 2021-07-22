@@ -10,7 +10,7 @@ import (
 	"github.com/VTerenya/employees/internal/repository"
 )
 
-type Serv interface {
+type Service interface {
 	CreatePosition(p *internal.Position) error
 	CreateEmployee(e *internal.Employee) error
 	GetPositions(limit, offset int) ([]internal.Position, error)
@@ -23,21 +23,21 @@ type Serv interface {
 	UpdateEmployee(e *internal.Employee) error
 }
 
-type Service struct {
-	repo *repository.Repository
+type Serv struct {
+	repo *repository.Repo
 }
 
-func NewService(repository *repository.Repository) *Service {
-	return &Service{
+func NewServ(repository *repository.Repo) *Serv {
+	return &Serv{
 		repo: repository,
 	}
 }
 
-func (t Service) CreatePosition(p *internal.Position) error {
+func (t Serv) CreatePosition(p *internal.Position) error {
 	m := t.repo.GetPositions()
 	for _, value := range m {
 		if value.Salary == p.Salary && value.Name == p.Name {
-			return errors.New("create error: this position is exists")
+			return errors.New("position is exists")
 		}
 	}
 	p.ID = uuid.New()
@@ -45,12 +45,12 @@ func (t Service) CreatePosition(p *internal.Position) error {
 	return nil
 }
 
-func (t Service) CreateEmployee(e *internal.Employee) error {
+func (t Serv) CreateEmployee(e *internal.Employee) error {
 	m := t.repo.GetEmployees()
 	for _, value := range m {
 		if value.LasName == e.LasName &&
 			value.FirstName == e.FirstName {
-			return errors.New("create error: employee is exists")
+			return errors.New("employee is exists")
 		}
 	}
 	e.ID = uuid.New()
@@ -58,7 +58,7 @@ func (t Service) CreateEmployee(e *internal.Employee) error {
 	return nil
 }
 
-func (t Service) GetPositions(limit, offset int) ([]internal.Position, error) {
+func (t Serv) GetPositions(limit, offset int) ([]internal.Position, error) {
 	m := t.repo.GetPositions()
 	positions := make([]internal.Position, 0)
 	for _, value := range m {
@@ -72,14 +72,13 @@ func (t Service) GetPositions(limit, offset int) ([]internal.Position, error) {
 	if len(positions) == 0 {
 		return answer, nil
 	}
-
 	for i := limit * offset; i < limit*offset+limit && i < len(positions); i++ {
 		answer = append(answer, positions[i])
 	}
 	return answer, nil
 }
 
-func (t Service) GetEmployees(limit, offset int) ([]internal.Employee, error) {
+func (t Serv) GetEmployees(limit, offset int) ([]internal.Employee, error) {
 	m := t.repo.GetEmployees()
 	employees := make([]internal.Employee, 0)
 	for _, value := range m {
@@ -99,7 +98,7 @@ func (t Service) GetEmployees(limit, offset int) ([]internal.Employee, error) {
 	return answer, nil
 }
 
-func (t Service) GetPosition(id string) (internal.Position, error) {
+func (t Serv) GetPosition(id string) (internal.Position, error) {
 	m := t.repo.GetPositions()
 	uID, err := uuid.Parse(id)
 	if err != nil {
@@ -110,10 +109,10 @@ func (t Service) GetPosition(id string) (internal.Position, error) {
 			return value, nil
 		}
 	}
-	return internal.Position{}, errors.New("get error: no this position")
+	return internal.Position{}, errors.New("not found")
 }
 
-func (t Service) GetEmployee(id string) (internal.Employee, error) {
+func (t Serv) GetEmployee(id string) (internal.Employee, error) {
 	m := t.repo.GetEmployees()
 	uID, err := uuid.Parse(id)
 	if err != nil {
@@ -124,10 +123,10 @@ func (t Service) GetEmployee(id string) (internal.Employee, error) {
 			return value, nil
 		}
 	}
-	return internal.Employee{}, errors.New("get error: no this employee")
+	return internal.Employee{}, errors.New("not found")
 }
 
-func (t Service) DeletePosition(id string) error {
+func (t Serv) DeletePosition(id string) error {
 	m := t.repo.GetPositions()
 	uID, err := uuid.Parse(id)
 	if err != nil {
@@ -138,10 +137,10 @@ func (t Service) DeletePosition(id string) error {
 			delete(m, key)
 		}
 	}
-	return errors.New("delete error: no this position")
+	return errors.New("not found")
 }
 
-func (t Service) DeleteEmployee(id string) error {
+func (t Serv) DeleteEmployee(id string) error {
 	m := t.repo.GetEmployees()
 	uID, err := uuid.Parse(id)
 	if err != nil {
@@ -152,30 +151,30 @@ func (t Service) DeleteEmployee(id string) error {
 			delete(m, key)
 		}
 	}
-	return errors.New("delete error: no this employee")
+	return errors.New("not found")
 }
 
-func (t Service) UpdatePosition(p *internal.Position) error {
+func (t Serv) UpdatePosition(p *internal.Position) error {
 	m := t.repo.GetPositions()
-	if p.ID.String() == "00000000-0000-0000-0000-000000000000" {
-		return errors.New("error incorrect input")
+	if p.ID.String() == uuid.Nil.String() {
+		return errors.New("incorrect data")
 	}
 	if _, ok := m[p.ID.String()]; ok {
 		delete(m, p.ID.String())
 		t.repo.AddPosition(p)
 	}
-	return errors.New("update error: no this employee")
+	return errors.New("not found")
 }
 
-func (t Service) UpdateEmployee(e *internal.Employee) error {
+func (t Serv) UpdateEmployee(e *internal.Employee) error {
 	m := t.repo.GetEmployees()
 	fmt.Println(e.ID.String())
-	if e.ID.String() == "00000000-0000-0000-0000-000000000000" {
-		return errors.New("error incorrect input")
+	if e.ID.String() == uuid.Nil.String() {
+		return errors.New("incorrect data")
 	}
 	if _, ok := m[e.ID.String()]; ok {
 		delete(m, e.ID.String())
 		t.repo.AddEmployee(e)
 	}
-	return errors.New("update error: no this employee")
+	return errors.New("not found")
 }

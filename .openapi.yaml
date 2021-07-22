@@ -346,16 +346,17 @@ paths:
 components:
   schemas:
     user:
+      type: object
       properties:
         login:
           type: string
         password:
           type: string
     uuid:
-      properties:
-        id:
-          type: string
+      type: string
+      format: uuid
     employee:
+      type: object
       properties:
         first_name:
           type: string
@@ -364,9 +365,11 @@ components:
         id:
           type: string
           format: uuid
+          writeOnly: true
         position:
           type: string
     position:
+      type: object
       properties:
         name:
           type: string

@@ -12,8 +12,8 @@ import (
 func main() {
 	mux := http.NewServeMux()
 	myData := repository.NewDataBase()
-	myRepo := repository.NewRepository(myData)
-	myServ := service.NewService(myRepo)
+	myRepo := repository.NewRepo(myData)
+	myServ := service.NewServ(myRepo)
 	myH := handler.NewHandler(myServ)
 	mux.Handle("/positions", myH)
 	mux.Handle("/position/", myH)
