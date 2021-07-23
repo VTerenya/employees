@@ -78,7 +78,7 @@ paths:
           name: id
           required: true
           schema:
-            $ref: "#/components/schemas/employee"
+            $ref: "#/components/schemas/uuid"
       responses:
         '204':
           description: "No Content"
@@ -94,9 +94,14 @@ paths:
                 $ref: "#/components/responses/not_found_error"
         '500':
           description: "Internal server error"
-  /employee:
     get:
       description: Get an employee
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/uuid"
       responses:
         '200':
           description: Get an employee
@@ -112,6 +117,7 @@ paths:
                 $ref: "#/components/responses/not_found_error"
         '500':
           description: Enternal Server Error.
+  /employee:
     post:
       security:
         - bearerAuth: [ ]
@@ -225,23 +231,6 @@ paths:
         '500':
           description: Enternal Server Error.
   /position:
-    get:
-      description: Get an position
-      responses:
-        '200':
-          description: Get an position
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/position'
-        '404':
-          description: "Page not found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/responses/not_found_error"
-        '500':
-          description: Enternal Server Error.
     post:
       security:
         - bearerAuth: [ ]
@@ -327,7 +316,7 @@ paths:
           name: id
           required: true
           schema:
-            type: string
+            $ref: "#/components/schemas/uuid"
       responses:
         '204':
           description: "No Content"
@@ -343,6 +332,29 @@ paths:
                 $ref: "#/components/responses/not_found_error"
         '500':
           description: "Internal server error"
+    get:
+      description: Get an position
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/uuid"
+      responses:
+        '200':
+          description: Get an position
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/position'
+        '404':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/not_found_error"
+        '500':
+          description: Enternal Server Error.
 components:
   schemas:
     user:
@@ -365,7 +377,6 @@ components:
         id:
           type: string
           format: uuid
-          writeOnly: true
         position:
           type: string
     position:
