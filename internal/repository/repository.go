@@ -2,38 +2,30 @@ package repository
 
 import (
 	"github.com/VTerenya/employees/internal"
+	"github.com/VTerenya/employees/internal/myerrors"
 )
 
-type Repository interface {
-	GetPositions() map[string]internal.Position
-	GetEmployees() map[string]internal.Employee
-	AddPosition(p internal.Position)
-	AddEmployee(e internal.Employee)
-}
-
-type Repo struct {
+type Repository struct {
 	data *Database
 }
 
-func NewRepo(data *Database) *Repo {
-	return &Repo{
-		data,
-	}
+func NewRepo(data *Database) *Repository {
+	return &Repository{data: data}
 }
 
-func (t Repo) GetPositions() map[string]internal.Position {
+func (t Repository) GetPositions() map[string]internal.Position {
 	return t.data.GetPosition()
 }
 
-func (t Repo) GetEmployees() map[string]internal.Employee {
+func (t Repository) GetEmployees() map[string]internal.Employee {
 	return t.data.GetEmployees()
 }
 
-func (t Repo) AddPosition(p *internal.Position) {
+func (t Repository) AddPosition(p *internal.Position) {
 	t.data.GetPosition()[p.ID.String()] = *p
 }
 
-func (t Repo) AddEmployee(e *internal.Employee) {
+func (t Repository) AddEmployee(e *internal.Employee) {
 	t.data.GetEmployees()[e.ID.String()] = *e
 }
 
@@ -55,4 +47,36 @@ func (d Database) GetEmployees() map[string]internal.Employee {
 
 func (d Database) GetPosition() map[string]internal.Position {
 	return d.positions
+}
+
+func (t Repository) DeletePosition(id string) error {
+	if _, ok := t.data.positions[id]; ok {
+		delete(t.data.positions, id)
+		return nil
+	}
+	return myerrors.NotFound()
+}
+
+func (t Repository) DeleteEmployee(id string) error {
+	if _, ok := t.data.employees[id]; ok {
+		delete(t.data.employees, id)
+		return nil
+	}
+	return myerrors.NotFound()
+}
+
+func (t Repository) UpdatePosition(p *internal.Position) error {
+	if _, ok := t.data.positions[p.ID.String()]; ok {
+		t.data.positions[p.ID.String()] = *p
+		return nil
+	}
+	return myerrors.NotFound()
+}
+
+func (t Repository) UpdateEmployee(e *internal.Employee) error {
+	if _, ok := t.data.employees[e.ID.String()]; ok {
+		t.data.employees[e.ID.String()] = *e
+		return nil
+	}
+	return myerrors.NotFound()
 }

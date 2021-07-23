@@ -1,8 +1,7 @@
 package service
 
 import (
-	"errors"
-	"fmt"
+	"github.com/VTerenya/employees/internal/myerrors"
 
 	"github.com/google/uuid"
 
@@ -24,10 +23,10 @@ type Service interface {
 }
 
 type Serv struct {
-	repo *repository.Repo
+	repo *repository.Repository
 }
 
-func NewServ(repository *repository.Repo) *Serv {
+func NewServ(repository *repository.Repository) *Serv {
 	return &Serv{
 		repo: repository,
 	}
@@ -37,7 +36,7 @@ func (t Serv) CreatePosition(p *internal.Position) error {
 	m := t.repo.GetPositions()
 	for _, value := range m {
 		if value.Salary == p.Salary && value.Name == p.Name {
-			return errors.New("position is exists")
+			return myerrors.PositionIsExists()
 		}
 	}
 	p.ID = uuid.New()
@@ -50,7 +49,7 @@ func (t Serv) CreateEmployee(e *internal.Employee) error {
 	for _, value := range m {
 		if value.LasName == e.LasName &&
 			value.FirstName == e.FirstName {
-			return errors.New("employee is exists")
+			return myerrors.EmployeeIsExists()
 		}
 	}
 	e.ID = uuid.New()
@@ -60,17 +59,17 @@ func (t Serv) CreateEmployee(e *internal.Employee) error {
 
 func (t Serv) GetPositions(limit, offset int) ([]internal.Position, error) {
 	m := t.repo.GetPositions()
+	answer := make([]internal.Position, 0)
+	if len(m) == 0 && offset == 1 && limit == 1 {
+		return answer, nil
+	}
 	positions := make([]internal.Position, 0)
 	for _, value := range m {
 		positions = append(positions, value)
 	}
 	offset--
-	if float64(len(positions))/float64(limit) < float64(offset) || limit < 1 || offset < 0 {
-		return nil, errors.New("incorrect data")
-	}
-	var answer []internal.Position
-	if len(positions) == 0 {
-		return answer, nil
+	if float64(len(positions))/float64(limit) <= float64(offset) || limit < 1 || offset < 0 {
+		return nil, myerrors.NotFound()
 	}
 	for i := limit * offset; i < limit*offset+limit && i < len(positions); i++ {
 		answer = append(answer, positions[i])
@@ -80,17 +79,17 @@ func (t Serv) GetPositions(limit, offset int) ([]internal.Position, error) {
 
 func (t Serv) GetEmployees(limit, offset int) ([]internal.Employee, error) {
 	m := t.repo.GetEmployees()
+	answer := make([]internal.Employee, 0)
+	if len(m) == 0 && offset == 1 && limit == 1 {
+		return answer, nil
+	}
 	employees := make([]internal.Employee, 0)
 	for _, value := range m {
 		employees = append(employees, value)
 	}
 	offset--
-	if float64(len(employees))/float64(limit) < float64(offset) || limit < 1 || offset < 0 {
-		return nil, errors.New("incorrect data")
-	}
-	var answer []internal.Employee
-	if len(employees) == 0 {
-		return answer, nil
+	if float64(len(employees))/float64(limit) <= float64(offset) || limit < 1 || offset < 0 {
+		return nil, myerrors.NotFound()
 	}
 	for i := limit * offset; i < limit*offset+limit && i < len(employees); i++ {
 		answer = append(answer, employees[i])
@@ -109,7 +108,7 @@ func (t Serv) GetPosition(id string) (internal.Position, error) {
 			return value, nil
 		}
 	}
-	return internal.Position{}, errors.New("not found")
+	return internal.Position{}, myerrors.NotFound()
 }
 
 func (t Serv) GetEmployee(id string) (internal.Employee, error) {
@@ -123,58 +122,27 @@ func (t Serv) GetEmployee(id string) (internal.Employee, error) {
 			return value, nil
 		}
 	}
-	return internal.Employee{}, errors.New("not found")
+	return internal.Employee{}, myerrors.NotFound()
 }
 
 func (t Serv) DeletePosition(id string) error {
-	m := t.repo.GetPositions()
-	uID, err := uuid.Parse(id)
-	if err != nil {
-		return err
-	}
-	for key, value := range m {
-		if value.ID == uID {
-			delete(m, key)
-		}
-	}
-	return errors.New("not found")
+	return t.repo.DeletePosition(id)
 }
 
 func (t Serv) DeleteEmployee(id string) error {
-	m := t.repo.GetEmployees()
-	uID, err := uuid.Parse(id)
-	if err != nil {
-		return err
-	}
-	for key, value := range m {
-		if value.ID == uID {
-			delete(m, key)
-		}
-	}
-	return errors.New("not found")
+	return t.repo.DeleteEmployee(id)
 }
 
 func (t Serv) UpdatePosition(p *internal.Position) error {
-	m := t.repo.GetPositions()
 	if p.ID.String() == uuid.Nil.String() {
-		return errors.New("incorrect data")
+		return myerrors.BadRequest()
 	}
-	if _, ok := m[p.ID.String()]; ok {
-		delete(m, p.ID.String())
-		t.repo.AddPosition(p)
-	}
-	return errors.New("not found")
+	return t.repo.UpdatePosition(p)
 }
 
 func (t Serv) UpdateEmployee(e *internal.Employee) error {
-	m := t.repo.GetEmployees()
-	fmt.Println(e.ID.String())
 	if e.ID.String() == uuid.Nil.String() {
-		return errors.New("incorrect data")
+		return myerrors.BadRequest()
 	}
-	if _, ok := m[e.ID.String()]; ok {
-		delete(m, e.ID.String())
-		t.repo.AddEmployee(e)
-	}
-	return errors.New("not found")
+	return t.repo.UpdateEmployee(e)
 }

@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/VTerenya/employees/internal"
+	"github.com/VTerenya/employees/internal/myerrors"
 	"github.com/VTerenya/employees/internal/service"
 	"github.com/shopspring/decimal"
 )
@@ -94,7 +95,7 @@ func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
 	}
 	positions, err := h.service.GetPositions(int(limit), int(offset))
 	if err != nil {
-		if errors.Is(err, errors.New("incorrect data")) {
+		if errors.Is(err, myerrors.NotFound()) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -132,7 +133,7 @@ func (h *Handler) getEmployees(w http.ResponseWriter, r *http.Request) {
 	}
 	employees, err := h.service.GetEmployees(int(limit), int(offset))
 	if err != nil {
-		if errors.Is(err, errors.New("incorrect data")) {
+		if errors.Is(err, myerrors.NotFound()) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -159,7 +160,7 @@ func (h *Handler) getPosition(w http.ResponseWriter, r *http.Request) {
 	}
 	p, err := h.service.GetPosition(matches[1])
 	if err != nil {
-		if errors.Is(err, errors.New("not found")) {
+		if errors.Is(err, myerrors.NotFound()) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -181,12 +182,12 @@ func (h *Handler) getPosition(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getEmployee(w http.ResponseWriter, r *http.Request) {
 	matches := employeeRe.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		http.Error(w, myerrors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
 	e, err := h.service.GetEmployee(matches[1])
 	if err != nil {
-		if errors.Is(err, errors.New("not found")) {
+		if errors.Is(err, myerrors.NotFound()) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -212,7 +213,7 @@ func (h *Handler) createPosition(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if p.Salary == decimal.Zero || p.Name == "" {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		http.Error(w, myerrors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
 	err := h.service.CreatePosition(&p)
@@ -239,7 +240,7 @@ func (h *Handler) createEmployee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if e.LasName == "" || e.FirstName == "" || e.Position == "" {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		http.Error(w, myerrors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
 	err := h.service.CreateEmployee(&e)
@@ -267,7 +268,7 @@ func (h *Handler) updatePosition(w http.ResponseWriter, r *http.Request) {
 	}
 	err := h.service.UpdatePosition(&p)
 	if err != nil {
-		if errors.Is(err, errors.New("incorrect data")) {
+		if errors.Is(err, myerrors.BadRequest()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -294,7 +295,7 @@ func (h *Handler) updateEmployee(w http.ResponseWriter, r *http.Request) {
 	}
 	err := h.service.UpdateEmployee(&e)
 	if err != nil {
-		if errors.Is(err, errors.New("incorrect data")) {
+		if errors.Is(err, myerrors.BadRequest()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -317,11 +318,8 @@ func (h *Handler) deletePosition(w http.ResponseWriter, r *http.Request) {
 	deleteID := positionRe.FindStringSubmatch(r.URL.Path)[1]
 	err := h.service.DeletePosition(deleteID)
 	if err != nil {
-		if errors.Is(err, errors.New("not found")) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
 	jsonBytes, err := json.Marshal(internal.Position{})
 	if err != nil {
@@ -339,11 +337,8 @@ func (h *Handler) deleteEmployee(w http.ResponseWriter, r *http.Request) {
 	deleteID := employeeRe.FindStringSubmatch(r.URL.Path)[1]
 	err := h.service.DeleteEmployee(deleteID)
 	if err != nil {
-		if errors.Is(err, errors.New("not found")) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
 	jsonBytes, err := json.Marshal(internal.Employee{})
 	if err != nil {
