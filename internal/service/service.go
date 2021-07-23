@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/VTerenya/employees/internal/myerrors"
+	"github.com/VTerenya/employees/internal/errors"
 
 	"github.com/google/uuid"
 
@@ -36,7 +36,7 @@ func (t Serv) CreatePosition(p *internal.Position) error {
 	m := t.repo.GetPositions()
 	for _, value := range m {
 		if value.Salary == p.Salary && value.Name == p.Name {
-			return myerrors.PositionIsExists()
+			return errors.PositionIsExists()
 		}
 	}
 	p.ID = uuid.New()
@@ -49,7 +49,7 @@ func (t Serv) CreateEmployee(e *internal.Employee) error {
 	for _, value := range m {
 		if value.LasName == e.LasName &&
 			value.FirstName == e.FirstName {
-			return myerrors.EmployeeIsExists()
+			return errors.EmployeeIsExists()
 		}
 	}
 	e.ID = uuid.New()
@@ -69,7 +69,7 @@ func (t Serv) GetPositions(limit, offset int) ([]internal.Position, error) {
 	}
 	offset--
 	if float64(len(positions))/float64(limit) <= float64(offset) || limit < 1 || offset < 0 {
-		return nil, myerrors.NotFound()
+		return nil, errors.NotFound()
 	}
 	for i := limit * offset; i < limit*offset+limit && i < len(positions); i++ {
 		answer = append(answer, positions[i])
@@ -89,7 +89,7 @@ func (t Serv) GetEmployees(limit, offset int) ([]internal.Employee, error) {
 	}
 	offset--
 	if float64(len(employees))/float64(limit) <= float64(offset) || limit < 1 || offset < 0 {
-		return nil, myerrors.NotFound()
+		return nil, errors.NotFound()
 	}
 	for i := limit * offset; i < limit*offset+limit && i < len(employees); i++ {
 		answer = append(answer, employees[i])
@@ -108,7 +108,7 @@ func (t Serv) GetPosition(id string) (internal.Position, error) {
 			return value, nil
 		}
 	}
-	return internal.Position{}, myerrors.NotFound()
+	return internal.Position{}, errors.NotFound()
 }
 
 func (t Serv) GetEmployee(id string) (internal.Employee, error) {
@@ -122,7 +122,7 @@ func (t Serv) GetEmployee(id string) (internal.Employee, error) {
 			return value, nil
 		}
 	}
-	return internal.Employee{}, myerrors.NotFound()
+	return internal.Employee{}, errors.NotFound()
 }
 
 func (t Serv) DeletePosition(id string) error {
@@ -135,14 +135,14 @@ func (t Serv) DeleteEmployee(id string) error {
 
 func (t Serv) UpdatePosition(p *internal.Position) error {
 	if p.ID.String() == uuid.Nil.String() {
-		return myerrors.BadRequest()
+		return errors.BadRequest()
 	}
 	return t.repo.UpdatePosition(p)
 }
 
 func (t Serv) UpdateEmployee(e *internal.Employee) error {
 	if e.ID.String() == uuid.Nil.String() {
-		return myerrors.BadRequest()
+		return errors.BadRequest()
 	}
 	return t.repo.UpdateEmployee(e)
 }

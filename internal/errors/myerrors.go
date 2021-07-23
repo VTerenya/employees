@@ -1,4 +1,4 @@
-package myerrors
+package errors
 
 var (
 	badRequest       = newError("bad request")

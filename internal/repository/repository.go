@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/VTerenya/employees/internal"
-	"github.com/VTerenya/employees/internal/myerrors"
+	"github.com/VTerenya/employees/internal/errors"
 )
 
 type Repository struct {
@@ -54,7 +54,7 @@ func (t Repository) DeletePosition(id string) error {
 		delete(t.data.positions, id)
 		return nil
 	}
-	return myerrors.NotFound()
+	return errors.NotFound()
 }
 
 func (t Repository) DeleteEmployee(id string) error {
@@ -62,7 +62,7 @@ func (t Repository) DeleteEmployee(id string) error {
 		delete(t.data.employees, id)
 		return nil
 	}
-	return myerrors.NotFound()
+	return errors.NotFound()
 }
 
 func (t Repository) UpdatePosition(p *internal.Position) error {
@@ -70,7 +70,7 @@ func (t Repository) UpdatePosition(p *internal.Position) error {
 		t.data.positions[p.ID.String()] = *p
 		return nil
 	}
-	return myerrors.NotFound()
+	return errors.NotFound()
 }
 
 func (t Repository) UpdateEmployee(e *internal.Employee) error {
@@ -78,5 +78,5 @@ func (t Repository) UpdateEmployee(e *internal.Employee) error {
 		t.data.employees[e.ID.String()] = *e
 		return nil
 	}
-	return myerrors.NotFound()
+	return errors.NotFound()
 }
