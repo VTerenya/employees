@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/VTerenya/employees/internal/middleware"
+	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 
@@ -23,6 +25,12 @@ type Handler interface {
 }
 
 func Run() {
+	contextLogger := logrus.WithFields(logrus.Fields{
+		"logger": "LOGRUS",
+	})
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+	middleware.Entry = contextLogger
+
 	mux := http.NewServeMux()
 	myData := repository.NewDataBase()
 	myRepo := repository.NewRepo(myData)
@@ -34,7 +42,10 @@ func Run() {
 	mux.Handle("/employees", myH)
 	mux.Handle("/employee/", myH)
 	mux.Handle("/employee", myH)
-	err := http.ListenAndServe("localhost:8080", mux)
+	timeHandler := middleware.TimeLogMiddleware(mux)
+	accessHandler := middleware.AccessLogMiddleware(timeHandler)
+	idHandler := middleware.IdMiddleware(accessHandler)
+	err := http.ListenAndServe("localhost:8080", idHandler)
 	if err != nil {
 		log.Fatal(err)
 	}
