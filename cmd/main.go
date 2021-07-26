@@ -22,7 +22,7 @@ type Handler interface {
 	UpdateEmployee(w http.ResponseWriter, r *http.Request)
 }
 
-func main() {
+func Run() {
 	mux := http.NewServeMux()
 	myData := repository.NewDataBase()
 	myRepo := repository.NewRepo(myData)
@@ -38,4 +38,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func main() {
+	Run()
 }

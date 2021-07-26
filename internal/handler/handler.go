@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	errs "errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -70,7 +69,6 @@ func (h *Hand) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.UpdateEmployee(w, r)
 		return
 	default:
-		fmt.Println("errors: not found")
 		http.NotFound(w, r)
 		return
 	}
@@ -120,7 +118,6 @@ func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	limit, err := strconv.ParseInt(query["limit"][0], 10, 64)
-	fmt.Println(limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
