@@ -6,27 +6,15 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/VTerenya/employees/internal"
-	"github.com/VTerenya/employees/internal/repository"
 )
 
-type Service interface {
-	CreatePosition(p *internal.Position) error
-	CreateEmployee(e *internal.Employee) error
-	GetPositions(limit, offset int) ([]internal.Position, error)
-	GetEmployees(limit, offset int) ([]internal.Employee, error)
-	GetPosition(id string) (internal.Position, error)
-	GetEmployee(id string) (internal.Employee, error)
-	DeletePosition(id string) error
-	DeleteEmployee(id string) error
-	UpdatePosition(p *internal.Position) error
-	UpdateEmployee(e *internal.Employee) error
-}
+
 
 type Serv struct {
-	repo *repository.Repository
+	repo Repository
 }
 
-func NewServ(repository *repository.Repository) *Serv {
+func NewServ(repository Repository) *Serv {
 	return &Serv{
 		repo: repository,
 	}

@@ -7,15 +7,15 @@ var (
 	employeeIsExists = newError("employee is exists")
 )
 
-type myError struct {
+type Errors struct {
 	description string
 }
 
-func newError(desc string) *myError {
-	return &myError{description: desc}
+func newError(desc string) *Errors {
+	return &Errors{description: desc}
 }
 
-func (m myError) Error() string {
+func (m Errors) Error() string {
 	return m.description
 }
 

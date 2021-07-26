@@ -29,26 +29,6 @@ func (t Repository) AddEmployee(e *internal.Employee) {
 	t.data.GetEmployees()[e.ID.String()] = *e
 }
 
-type Database struct {
-	employees map[string]internal.Employee
-	positions map[string]internal.Position
-}
-
-func NewDataBase() *Database {
-	return &Database{
-		employees: map[string]internal.Employee{},
-		positions: map[string]internal.Position{},
-	}
-}
-
-func (d Database) GetEmployees() map[string]internal.Employee {
-	return d.employees
-}
-
-func (d Database) GetPosition() map[string]internal.Position {
-	return d.positions
-}
-
 func (t Repository) DeletePosition(id string) error {
 	if _, ok := t.data.positions[id]; ok {
 		delete(t.data.positions, id)
@@ -79,4 +59,24 @@ func (t Repository) UpdateEmployee(e *internal.Employee) error {
 		return nil
 	}
 	return errors.NotFound()
+}
+
+type Database struct {
+	employees map[string]internal.Employee
+	positions map[string]internal.Position
+}
+
+func NewDataBase() *Database {
+	return &Database{
+		employees: map[string]internal.Employee{},
+		positions: map[string]internal.Position{},
+	}
+}
+
+func (d Database) GetEmployees() map[string]internal.Employee {
+	return d.employees
+}
+
+func (d Database) GetPosition() map[string]internal.Position {
+	return d.positions
 }

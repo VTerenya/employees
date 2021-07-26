@@ -9,6 +9,19 @@ import (
 	"github.com/VTerenya/employees/internal/service"
 )
 
+type Handler interface {
+	GetPositions(w http.ResponseWriter, r *http.Request)
+	GetEmployees(w http.ResponseWriter, r *http.Request)
+	GetPosition(w http.ResponseWriter, r *http.Request)
+	GetEmployee(w http.ResponseWriter, r *http.Request)
+	CreatePosition(w http.ResponseWriter, r *http.Request)
+	CreateEmployee(w http.ResponseWriter, r *http.Request)
+	DeletePosition(w http.ResponseWriter, r *http.Request)
+	DeleteEmployee(w http.ResponseWriter, r *http.Request)
+	UpdatePosition(w http.ResponseWriter, r *http.Request)
+	UpdateEmployee(w http.ResponseWriter, r *http.Request)
+}
+
 func main() {
 	mux := http.NewServeMux()
 	myData := repository.NewDataBase()

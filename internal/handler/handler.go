@@ -11,7 +11,6 @@ import (
 
 	"github.com/VTerenya/employees/internal"
 	"github.com/VTerenya/employees/internal/errors"
-	"github.com/VTerenya/employees/internal/service"
 	"github.com/shopspring/decimal"
 )
 
@@ -25,59 +24,59 @@ var (
 	createEmployeeRe = regexp.MustCompile(`[\\/]employee$`)
 )
 
-type Handler struct {
-	service service.Service
+type Hand struct {
+	service Service
 }
 
-func NewHandler(service service.Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service Service) *Hand {
+	return &Hand{service: service}
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 	switch {
 	case r.Method == http.MethodGet && positionsRe.MatchString(r.URL.String()):
-		h.getPositions(w, r)
+		h.GetPositions(w, r)
 		return
 	case r.Method == http.MethodGet && employeesRe.MatchString(r.URL.String()):
-		h.getEmployees(w, r)
+		h.GetEmployees(w, r)
 		return
 
 	case r.Method == http.MethodGet && positionRe.MatchString(r.URL.String()):
-		h.getPosition(w, r)
+		h.GetPosition(w, r)
 		return
 	case r.Method == http.MethodGet && employeeRe.MatchString(r.URL.String()):
-		h.getEmployee(w, r)
+		h.GetEmployee(w, r)
 		return
 
 	case r.Method == http.MethodPost && createPositionRe.MatchString(r.URL.Path):
-		h.createPosition(w, r)
+		h.CreatePosition(w, r)
 		return
 	case r.Method == http.MethodPost && createEmployeeRe.MatchString(r.URL.Path):
-		h.createEmployee(w, r)
+		h.CreateEmployee(w, r)
 		return
 
 	case r.Method == http.MethodDelete && positionRe.MatchString(r.URL.String()):
-		h.deletePosition(w, r)
+		h.DeletePosition(w, r)
 		return
 	case r.Method == http.MethodDelete && employeeRe.MatchString(r.URL.String()):
-		h.deleteEmployee(w, r)
+		h.DeleteEmployee(w, r)
 		return
 
 	case r.Method == http.MethodPut && createPositionRe.MatchString(r.URL.String()):
-		h.updatePosition(w, r)
+		h.UpdatePosition(w, r)
 		return
 	case r.Method == http.MethodPut && createEmployeeRe.MatchString(r.URL.String()):
-		h.updateEmployee(w, r)
+		h.UpdateEmployee(w, r)
 		return
 	default:
-		fmt.Println("error: not found")
+		fmt.Println("errors: not found")
 		http.NotFound(w, r)
 		return
 	}
 }
 
-func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
 	query, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -114,7 +113,7 @@ func (h *Handler) getPositions(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) getEmployees(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
 	query, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -152,7 +151,7 @@ func (h *Handler) getEmployees(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) getPosition(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
 	matches := positionRe.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -179,7 +178,7 @@ func (h *Handler) getPosition(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) getEmployee(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
 	matches := employeeRe.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
@@ -206,7 +205,7 @@ func (h *Handler) getEmployee(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) createPosition(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 	var p internal.Position
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -233,7 +232,7 @@ func (h *Handler) createPosition(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *Handler) createEmployee(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -260,7 +259,7 @@ func (h *Handler) createEmployee(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *Handler) updatePosition(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) UpdatePosition(w http.ResponseWriter, r *http.Request) {
 	var p internal.Position
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -287,7 +286,7 @@ func (h *Handler) updatePosition(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) updateEmployee(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -314,7 +313,7 @@ func (h *Handler) updateEmployee(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) deletePosition(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) DeletePosition(w http.ResponseWriter, r *http.Request) {
 	deleteID := positionRe.FindStringSubmatch(r.URL.Path)[1]
 	err := h.service.DeletePosition(deleteID)
 	if err != nil {
@@ -333,7 +332,7 @@ func (h *Handler) deletePosition(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *Handler) deleteEmployee(w http.ResponseWriter, r *http.Request) {
+func (h *Hand) DeleteEmployee(w http.ResponseWriter, r *http.Request) {
 	deleteID := employeeRe.FindStringSubmatch(r.URL.Path)[1]
 	err := h.service.DeleteEmployee(deleteID)
 	if err != nil {
