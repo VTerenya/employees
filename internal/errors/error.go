@@ -5,7 +5,6 @@ var (
 	notFound                  = newError("not found")
 	positionIsExists          = newError("position is exists")
 	employeeIsExists          = newError("employee is exists")
-	statusInternalServerError = newError("internal server error")
 )
 
 type Errors struct {
@@ -34,8 +33,4 @@ func PositionIsExists() error {
 
 func EmployeeIsExists() error {
 	return employeeIsExists
-}
-
-func StatusInternalServerError() error {
-	return statusInternalServerError
 }

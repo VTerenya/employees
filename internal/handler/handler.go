@@ -16,13 +16,8 @@ import (
 )
 
 var (
-	positionsRe      = regexp.MustCompile(`[\\/]positions\?limit=(\d+)&offset=(\d+)$`)
-	positionRe       = regexp.MustCompile(`[\\/]position[\\/](\S+)$`)
-	createPositionRe = regexp.MustCompile(`[\\/]position$`)
-
-	employeesRe      = regexp.MustCompile(`[\\/]employees\?limit=(\d+)&offset=(\d+)$`)
-	employeeRe       = regexp.MustCompile(`[\\/]employee[\\/](\S+)$`)
-	createEmployeeRe = regexp.MustCompile(`[\\/]employee$`)
+	posRegex = regexp.MustCompile(`[\\/]position[\\/](\S+)$`)
+	empRegex = regexp.MustCompile(`[\\/]employee[\\/](\S+)$`)
 )
 
 type Hand struct {
@@ -34,68 +29,18 @@ func NewHandler(service Service, lg ILogger) *Hand {
 	return &Hand{service: service, lg: lg}
 }
 
-func (h *Hand) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("content-type", "application/json")
-	switch {
-	case r.Method == http.MethodGet && positionsRe.MatchString(r.URL.String()):
-		h.GetPositions(w, r)
-		return
-	case r.Method == http.MethodGet && employeesRe.MatchString(r.URL.String()):
-		h.GetEmployees(w, r)
-		return
-
-	case r.Method == http.MethodGet && positionRe.MatchString(r.URL.String()):
-		h.GetPosition(w, r)
-		return
-	case r.Method == http.MethodGet && employeeRe.MatchString(r.URL.String()):
-		h.GetEmployee(w, r)
-		return
-
-	case r.Method == http.MethodPost && createPositionRe.MatchString(r.URL.Path):
-		h.CreatePosition(w, r)
-		return
-	case r.Method == http.MethodPost && createEmployeeRe.MatchString(r.URL.Path):
-		h.CreateEmployee(w, r)
-		return
-
-	case r.Method == http.MethodDelete && positionRe.MatchString(r.URL.String()):
-		h.DeletePosition(w, r)
-		return
-	case r.Method == http.MethodDelete && employeeRe.MatchString(r.URL.String()):
-		h.DeleteEmployee(w, r)
-		return
-
-	case r.Method == http.MethodPut && createPositionRe.MatchString(r.URL.String()):
-		h.UpdatePosition(w, r)
-		return
-	case r.Method == http.MethodPut && createEmployeeRe.MatchString(r.URL.String()):
-		h.UpdateEmployee(w, r)
-		return
-	default:
-		http.NotFound(w, r)
-		return
-	}
-}
-
-func (h *Hand) getInfo(r *http.Request) error {
+func (h Hand) getInfo(r *http.Request) {
 	ctx := r.Context()
 	corelationIDRaw := ctx.Value(middleware.CorrelationID)
-	corelationID, ok := corelationIDRaw.(string)
-	if !ok {
-		return errors.StatusInternalServerError()
-	}
+	corelationID, _ := corelationIDRaw.(string)
 	h.lg.WithFields(logrus.Fields{
 		"method":        r.Method,
 		"corelation_id": corelationID,
 	}).Info()
-	return nil
 }
 
-func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+func (h Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
+	h.getInfo(r)
 	query, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -133,10 +78,7 @@ func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	h.getInfo(r)
 	query, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -174,11 +116,8 @@ func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	matches := positionRe.FindStringSubmatch(r.URL.Path)
+	h.getInfo(r)
+	matches := posRegex.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -205,11 +144,8 @@ func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	matches := employeeRe.FindStringSubmatch(r.URL.Path)
+	h.getInfo(r)
+	matches := empRegex.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
@@ -236,10 +172,7 @@ func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	h.getInfo(r)
 	var p internal.Position
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -249,7 +182,7 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.service.CreatePosition(&p)
+	err := h.service.CreatePosition(&p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -267,10 +200,7 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	h.getInfo(r)
 	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -280,7 +210,7 @@ func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.service.CreateEmployee(&e)
+	err := h.service.CreateEmployee(&e)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -298,16 +228,13 @@ func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) UpdatePosition(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	h.getInfo(r)
 	var p internal.Position
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = h.service.UpdatePosition(&p)
+	err := h.service.UpdatePosition(&p)
 	if err != nil {
 		if errs.Is(err, errors.BadRequest()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -329,16 +256,13 @@ func (h *Hand) UpdatePosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	h.getInfo(r)
 	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = h.service.UpdateEmployee(&e)
+	err := h.service.UpdateEmployee(&e)
 	if err != nil {
 		if errs.Is(err, errors.BadRequest()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -360,12 +284,9 @@ func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) DeletePosition(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	deleteID := positionRe.FindStringSubmatch(r.URL.Path)[1]
-	err = h.service.DeletePosition(deleteID)
+	h.getInfo(r)
+	deleteID := posRegex.FindStringSubmatch(r.URL.Path)[1]
+	err := h.service.DeletePosition(deleteID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -383,12 +304,9 @@ func (h *Hand) DeletePosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) DeleteEmployee(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	deleteID := employeeRe.FindStringSubmatch(r.URL.Path)[1]
-	err = h.service.DeleteEmployee(deleteID)
+	h.getInfo(r)
+	deleteID := empRegex.FindStringSubmatch(r.URL.Path)[1]
+	err := h.service.DeleteEmployee(deleteID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

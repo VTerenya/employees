@@ -19,13 +19,14 @@ func NewLogger() *Logger {
 
 func (l Logger) AccessLogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next.ServeHTTP(w, r)
 		l.Entry.WithFields(logrus.Fields{
 			"type":        "access log",
 			"method":      r.Method,
 			"remote_addr": r.RemoteAddr,
 			"host":        r.Host,
+			"path":        r.URL.Path,
 		}).Info()
+		next.ServeHTTP(w, r)
 	})
 }
 
@@ -33,7 +34,7 @@ func (l Logger) TimeLogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		next.ServeHTTP(w, r)
-		duration := time.Now().Sub(start)
+		duration := time.Since(start)
 		l.Entry.WithFields(logrus.Fields{
 			"type":      "time log",
 			"work_time": duration,
