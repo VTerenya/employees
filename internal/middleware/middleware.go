@@ -2,50 +2,59 @@ package middleware
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
-var Entry *logrus.Entry
+type Logger struct {
+	Entry *logrus.Logger
+}
 
-func AccessLogMiddleware(next http.Handler) http.Handler {
+func NewLogger() *Logger {
+	return &Logger{Entry: logrus.New()}
+}
+
+func (l Logger) AccessLogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r)
-		Entry.WithFields(logrus.Fields{
+		l.Entry.WithFields(logrus.Fields{
 			"type":        "access log",
 			"method":      r.Method,
 			"remote_addr": r.RemoteAddr,
 			"host":        r.Host,
-		}).Info(r.URL.Path)
+		}).Info()
 	})
 }
 
-func TimeLogMiddleware(next http.Handler) http.Handler {
+func (l Logger) TimeLogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next.ServeHTTP(w, r)
 		start := time.Now()
-		Entry.WithFields(logrus.Fields{
+		next.ServeHTTP(w, r)
+		duration := time.Now().Sub(start)
+		l.Entry.WithFields(logrus.Fields{
 			"type":      "time log",
-			"work_time": time.Since(start),
-		}).Info(r.URL.Path)
+			"work_time": duration,
+		}).Info()
 	})
 }
 
-type contextKey string
+type correlationKey string
 
-var contextID contextKey = "ID"
+var CorrelationID correlationKey = "ID"
 
-func IdMiddleware(next http.Handler) http.Handler {
+func (l Logger) IDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		id := uuid.New()
-		ctx := context.WithValue(r.Context(), contextID, id.String())
+		ctx = context.WithValue(ctx, CorrelationID, id.String())
 		r = r.WithContext(ctx)
-		Entry.WithFields(logrus.Fields{
-			"type":           "id log",
-			"correlation_id": id.String(),
-		}).Info(r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (l Logger) WithFields(fields logrus.Fields) *logrus.Entry {
+	return l.Entry.WithFields(fields)
 }

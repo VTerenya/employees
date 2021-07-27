@@ -1,14 +1,10 @@
 package service
 
 import (
-	"github.com/VTerenya/employees/internal/errors"
-
-	"github.com/google/uuid"
-
 	"github.com/VTerenya/employees/internal"
+	"github.com/VTerenya/employees/internal/errors"
+	"github.com/google/uuid"
 )
-
-
 
 type Serv struct {
 	repo Repository
