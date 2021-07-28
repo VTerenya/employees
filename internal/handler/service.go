@@ -1,6 +1,10 @@
 package handler
 
-import "github.com/VTerenya/employees/internal"
+import (
+	"net/http"
+
+	"github.com/VTerenya/employees/internal"
+)
 
 type Service interface {
 	CreatePosition(p *internal.Position) error
@@ -13,4 +17,5 @@ type Service interface {
 	DeleteEmployee(id string) error
 	UpdatePosition(p *internal.Position) error
 	UpdateEmployee(e *internal.Employee) error
+	LogCorrelationID(r *http.Request) error
 }

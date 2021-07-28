@@ -1,13 +1,5 @@
 package errors
 
-var (
-	badRequest                = newError("bad request")
-	notFound                  = newError("not found")
-	positionIsExists          = newError("position is exists")
-	employeeIsExists          = newError("employee is exists")
-	statusInternalServerError = newError("internal server error")
-)
-
 type Errors struct {
 	description string
 }
@@ -21,21 +13,25 @@ func (m Errors) Error() string {
 }
 
 func BadRequest() error {
-	return badRequest
+	return newError("bad request")
 }
 
 func NotFound() error {
-	return notFound
+	return newError("not found")
 }
 
 func PositionIsExists() error {
-	return positionIsExists
+	return newError("position is exists")
 }
 
 func EmployeeIsExists() error {
-	return employeeIsExists
+	return newError("employee is exists")
 }
 
 func StatusInternalServerError() error {
-	return statusInternalServerError
+	return newError("internal server error")
+}
+
+func PositionIsNotExists() error {
+	return newError("position is not exists")
 }

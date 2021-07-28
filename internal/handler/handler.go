@@ -10,9 +10,7 @@ import (
 
 	"github.com/VTerenya/employees/internal"
 	"github.com/VTerenya/employees/internal/errors"
-	"github.com/VTerenya/employees/internal/middleware"
 	"github.com/shopspring/decimal"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -27,15 +25,19 @@ var (
 
 type Hand struct {
 	service Service
-	lg      ILogger
 }
 
-func NewHandler(service Service, lg ILogger) *Hand {
-	return &Hand{service: service, lg: lg}
+func NewHandler(service Service) *Hand {
+	return &Hand{service: service}
 }
 
 func (h *Hand) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
+	err := h.service.LogCorrelationID(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	switch {
 	case r.Method == http.MethodGet && positionsRe.MatchString(r.URL.String()):
 		h.GetPositions(w, r)
@@ -77,25 +79,7 @@ func (h *Hand) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Hand) getInfo(r *http.Request) error {
-	ctx := r.Context()
-	corelationIDRaw := ctx.Value(middleware.CorrelationID)
-	corelationID, ok := corelationIDRaw.(string)
-	if !ok {
-		return errors.StatusInternalServerError()
-	}
-	h.lg.WithFields(logrus.Fields{
-		"method":        r.Method,
-		"corelation_id": corelationID,
-	}).Info()
-	return nil
-}
-
 func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 	query, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -129,14 +113,9 @@ func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 	query, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -170,14 +149,9 @@ func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 	matches := positionRe.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -201,14 +175,9 @@ func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 	matches := employeeRe.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
@@ -232,14 +201,9 @@ func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 	var p internal.Position
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -249,7 +213,7 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.service.CreatePosition(&p)
+	err := h.service.CreatePosition(&p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -263,14 +227,9 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusCreated)
 }
 
 func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -280,7 +239,7 @@ func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.service.CreateEmployee(&e)
+	err := h.service.CreateEmployee(&e)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -294,20 +253,15 @@ func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusCreated)
 }
 
 func (h *Hand) UpdatePosition(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 	var p internal.Position
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = h.service.UpdatePosition(&p)
+	err := h.service.UpdatePosition(&p)
 	if err != nil {
 		if errs.Is(err, errors.BadRequest()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -325,20 +279,15 @@ func (h *Hand) UpdatePosition(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = h.service.UpdateEmployee(&e)
+	err := h.service.UpdateEmployee(&e)
 	if err != nil {
 		if errs.Is(err, errors.BadRequest()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -356,16 +305,11 @@ func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) DeletePosition(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 	deleteID := positionRe.FindStringSubmatch(r.URL.Path)[1]
-	err = h.service.DeletePosition(deleteID)
+	err := h.service.DeletePosition(deleteID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -379,11 +323,10 @@ func (h *Hand) DeletePosition(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Hand) DeleteEmployee(w http.ResponseWriter, r *http.Request) {
-	err := h.getInfo(r)
+	err := h.service.LogCorrelationID(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -402,5 +345,4 @@ func (h *Hand) DeleteEmployee(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusNoContent)
 }

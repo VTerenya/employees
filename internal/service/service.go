@@ -1,9 +1,12 @@
 package service
 
 import (
+	"net/http"
+
 	"github.com/VTerenya/employees/internal"
 	"github.com/VTerenya/employees/internal/errors"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type Serv struct {
@@ -14,6 +17,19 @@ func NewServ(repository Repository) *Serv {
 	return &Serv{
 		repo: repository,
 	}
+}
+
+func (t *Serv) LogCorrelationID(r *http.Request) error {
+	ctx := r.Context()
+	corelationID, ok := ctx.Value("ID").(string)
+	if !ok {
+		return errors.StatusInternalServerError()
+	}
+	logrus.WithFields(logrus.Fields{
+		"method":        r.Method,
+		"corelation_id": corelationID,
+	}).Info()
+	return nil
 }
 
 func (t Serv) CreatePosition(p *internal.Position) error {
@@ -30,6 +46,17 @@ func (t Serv) CreatePosition(p *internal.Position) error {
 
 func (t Serv) CreateEmployee(e *internal.Employee) error {
 	m := t.repo.GetEmployees()
+	p := t.repo.GetPositions()
+	ok := false
+	for _, value := range p {
+		if value.Name == e.Position {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		return errors.PositionIsNotExists()
+	}
 	for _, value := range m {
 		if value.LasName == e.LasName &&
 			value.FirstName == e.FirstName {
