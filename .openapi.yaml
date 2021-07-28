@@ -447,4 +447,3 @@ components:
       description: Bad request
     unsupported_type:
       description: Unsupported media type
-    position_is_not_

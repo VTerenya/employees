@@ -81,12 +81,14 @@ func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	limit, err := strconv.ParseInt(query["limit"][0], 10, 64)
+	limitQuery := query["limit"][0]
+	limit, err := strconv.ParseInt(limitQuery, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	offset, err := strconv.ParseInt(query["offset"][0], 10, 64)
+	offsetQuery := query["offset"][0]
+	offset, err := strconv.ParseInt(offsetQuery, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -117,12 +119,14 @@ func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	limit, err := strconv.ParseInt(query["limit"][0], 10, 64)
+	limitQuery := query["limit"][0]
+	limit, err := strconv.ParseInt(limitQuery, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	offset, err := strconv.ParseInt(query["offset"][0], 10, 64)
+	offsetQuery := query["offset"][0]
+	offset, err := strconv.ParseInt(offsetQuery, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
