@@ -376,8 +376,9 @@ components:
         id:
           type: string
           format: uuid
-        position:
+        positionID:
           type: string
+          format: uuid
     position:
       type: object
       properties:
@@ -446,3 +447,4 @@ components:
       description: Bad request
     unsupported_type:
       description: Unsupported media type
+    position_is_not_

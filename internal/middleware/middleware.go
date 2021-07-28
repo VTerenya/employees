@@ -39,7 +39,9 @@ func IDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		id := uuid.New()
+		//revive:disable
 		ctx = context.WithValue(ctx, CorrelationID, id.String())
+		//revive:enable
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})

@@ -4,7 +4,6 @@ linters:
     - deadcode          # Finds unused code
     - depguard          # Go linter that checks if package imports are in a list of acceptable packages
     - dogsled           # Checks assignments with too many blank identifiers (e.g. x, _, _, _, := f())
-    #    - dupl              # Tool for code clone detection
     - errcheck          # Errcheck is a program for checking for unchecked errors in go programs
     - funlen            # Tool for detection of long functions
     - gochecknoglobals  # Checks that no globals are present in Go code
@@ -35,3 +34,8 @@ linters:
     - unused            # Checks Go code for unused constants, variables, functions and types
     - varcheck          # Finds unused global variables and constants [fast: true, auto-fix: false]
     - whitespace        # Tool for detection of leading and trailing whitespace [fast: true, auto-fix: true]
+
+linters-settings:
+  staticcheck:
+    go: "1.16"
+    checks: [ "all", "-SA1029"]

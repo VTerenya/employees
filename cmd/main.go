@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Handler interface {
+type Handler interface { // nolint: deadcode
 	GetPositions(w http.ResponseWriter, r *http.Request)
 	GetEmployees(w http.ResponseWriter, r *http.Request)
 	GetPosition(w http.ResponseWriter, r *http.Request)
