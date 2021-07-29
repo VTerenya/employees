@@ -32,12 +32,15 @@ func Run() {
 	myRepo := repository.NewRepo(myData)
 	myServ := service.NewServ(myRepo)
 	myH := handler.NewHandler(myServ)
-	r.HandleFunc("/positions", myH.GetPositions).Queries("limit", "{limit:\\S+}", "offset", "{offset:\\S+}")
-	r.HandleFunc("/employees", myH.GetEmployees).Queries("limit", "{limit:\\S+}", "offset", "{offset:\\S+}")
-	r.HandleFunc("/position/{id:\\S+}", myH.GetPosition).Methods("GET")
-	r.HandleFunc("/employee/{id:\\S+}", myH.GetEmployee).Methods("GET")
-	r.HandleFunc("/position/{id:\\S+}", myH.DeletePosition).Methods("DELETE")
-	r.HandleFunc("/employee/{id:\\S+}", myH.DeleteEmployee).Methods("DELETE")
+	pathID := "{id:\\S+}"
+	pathLimit := "{limit:\\S+}"
+	pathOffset := "{offset:\\S+}"
+	r.HandleFunc("/positions", myH.GetPositions).Queries("limit", pathLimit, "offset", pathOffset).Methods("GET")
+	r.HandleFunc("/employees", myH.GetEmployees).Queries("limit", pathLimit, "offset", pathOffset).Methods("GET")
+	r.HandleFunc("/position/"+pathID, myH.GetPosition).Methods("GET")
+	r.HandleFunc("/employee/"+pathID, myH.GetEmployee).Methods("GET")
+	r.HandleFunc("/position/"+pathID, myH.DeletePosition).Methods("DELETE")
+	r.HandleFunc("/employee/"+pathID, myH.DeleteEmployee).Methods("DELETE")
 	r.HandleFunc("/position", myH.UpdatePosition).Methods("PUT")
 	r.HandleFunc("/employee", myH.UpdateEmployee).Methods("PUT")
 	r.HandleFunc("/position", myH.CreatePosition).Methods("POST")
