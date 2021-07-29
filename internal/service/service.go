@@ -75,6 +75,9 @@ func (t Serv) CreateEmployee(ctx context.Context, e *internal.Employee) error {
 }
 
 func (t Serv) GetPositions(ctx context.Context, limit, offset int) ([]internal.Position, error) {
+	if limit > 100 {
+		return nil, errors.BadRequest()
+	}
 	err := logCorrelationID(ctx)
 	if err != nil {
 		return nil, err
@@ -99,6 +102,9 @@ func (t Serv) GetPositions(ctx context.Context, limit, offset int) ([]internal.P
 }
 
 func (t Serv) GetEmployees(ctx context.Context, limit, offset int) ([]internal.Employee, error) {
+	if limit > 100 {
+		return nil, errors.BadRequest()
+	}
 	err := logCorrelationID(ctx)
 	if err != nil {
 		return nil, err

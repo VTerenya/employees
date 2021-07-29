@@ -8,6 +8,7 @@ import (
 	"github.com/VTerenya/employees/internal/middleware"
 	"github.com/VTerenya/employees/internal/repository"
 	"github.com/VTerenya/employees/internal/service"
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
@@ -24,23 +25,36 @@ type Handler interface { // nolint: deadcode
 	UpdateEmployee(w http.ResponseWriter, r *http.Request)
 }
 
+const (
+	pathPositions  = "/positions"
+	pathEmployees  = "/employees"
+	pathPosition   = "/position"
+	pathEmployee   = "/employee"
+	pathPositionID = "/position/{id:\\S+}"
+	pathEmployeeID = "/employee/{id:\\S+}"
+)
+
 func Run() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
-	mux := http.NewServeMux()
+	r := mux.NewRouter()
 	myData := repository.NewDataBase()
 	myRepo := repository.NewRepo(myData)
 	myServ := service.NewServ(myRepo)
 	myH := handler.NewHandler(myServ)
-	mux.Handle("/positions", myH)
-	mux.Handle("/position/", myH)
-	mux.Handle("/position", myH)
-	mux.Handle("/employees", myH)
-	mux.Handle("/employee/", myH)
-	mux.Handle("/employee", myH)
-	idMiddleware := middleware.IDMiddleware(mux)
-	timerMiddleware := middleware.TimeLogMiddleware(idMiddleware)
-	accessLogMiddleware := middleware.AccessLogMiddleware(timerMiddleware)
-	err := http.ListenAndServe("localhost:8080", accessLogMiddleware)
+	pathLimit := "{limit:\\S+}"
+	pathOffset := "{offset:\\S+}"
+	r.HandleFunc(pathPositions, myH.GetPositions).Queries("limit", pathLimit, "offset", pathOffset).Methods("GET")
+	r.HandleFunc(pathEmployees, myH.GetEmployees).Queries("limit", pathLimit, "offset", pathOffset).Methods("GET")
+	r.HandleFunc(pathPositionID, myH.GetPosition).Methods("GET")
+	r.HandleFunc(pathEmployeeID, myH.GetEmployee).Methods("GET")
+	r.HandleFunc(pathPositionID, myH.DeletePosition).Methods("DELETE")
+	r.HandleFunc(pathEmployeeID, myH.DeleteEmployee).Methods("DELETE")
+	r.HandleFunc(pathPosition, myH.UpdatePosition).Methods("PUT")
+	r.HandleFunc(pathEmployee, myH.UpdateEmployee).Methods("PUT")
+	r.HandleFunc(pathPosition, myH.CreatePosition).Methods("POST")
+	r.HandleFunc(pathEmployee, myH.CreateEmployee).Methods("POST")
+	r.Use(middleware.IDMiddleware, middleware.TimeLogMiddleware, middleware.AccessLogMiddleware)
+	err := http.ListenAndServe("localhost:8080", r)
 	if err != nil {
 		log.Fatal(err)
 	}
