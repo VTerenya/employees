@@ -15,13 +15,8 @@ import (
 )
 
 var (
-	positionsRe      = regexp.MustCompile(`[\\/]positions\?limit=(\d+)&offset=(\d+)$`)
-	positionRe       = regexp.MustCompile(`[\\/]position[\\/](\S+)$`)
-	createPositionRe = regexp.MustCompile(`[\\/]position$`)
-
-	employeesRe      = regexp.MustCompile(`[\\/]employees\?limit=(\d+)&offset=(\d+)$`)
-	employeeRe       = regexp.MustCompile(`[\\/]employee[\\/](\S+)$`)
-	createEmployeeRe = regexp.MustCompile(`[\\/]employee$`)
+	posRegex = regexp.MustCompile(`[\\/]position[\\/](\S+)$`)
+	empRegex = regexp.MustCompile(`[\\/]employee[\\/](\S+)$`)
 )
 
 type Hand struct {
@@ -30,49 +25,6 @@ type Hand struct {
 
 func NewHandler(service Service) *Hand {
 	return &Hand{service: service}
-}
-
-func (h *Hand) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("content-type", "application/json")
-	switch {
-	case r.Method == http.MethodGet && positionsRe.MatchString(r.URL.String()):
-		h.GetPositions(w, r)
-		return
-	case r.Method == http.MethodGet && employeesRe.MatchString(r.URL.String()):
-		h.GetEmployees(w, r)
-		return
-
-	case r.Method == http.MethodGet && positionRe.MatchString(r.URL.String()):
-		h.GetPosition(w, r)
-		return
-	case r.Method == http.MethodGet && employeeRe.MatchString(r.URL.String()):
-		h.GetEmployee(w, r)
-		return
-
-	case r.Method == http.MethodPost && createPositionRe.MatchString(r.URL.Path):
-		h.CreatePosition(w, r)
-		return
-	case r.Method == http.MethodPost && createEmployeeRe.MatchString(r.URL.Path):
-		h.CreateEmployee(w, r)
-		return
-
-	case r.Method == http.MethodDelete && positionRe.MatchString(r.URL.String()):
-		h.DeletePosition(w, r)
-		return
-	case r.Method == http.MethodDelete && employeeRe.MatchString(r.URL.String()):
-		h.DeleteEmployee(w, r)
-		return
-
-	case r.Method == http.MethodPut && createPositionRe.MatchString(r.URL.String()):
-		h.UpdatePosition(w, r)
-		return
-	case r.Method == http.MethodPut && createEmployeeRe.MatchString(r.URL.String()):
-		h.UpdateEmployee(w, r)
-		return
-	default:
-		http.NotFound(w, r)
-		return
-	}
 }
 
 func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +104,7 @@ func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
-	matches := positionRe.FindStringSubmatch(r.URL.Path)
+	matches := posRegex.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -178,7 +130,7 @@ func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
-	matches := employeeRe.FindStringSubmatch(r.URL.Path)
+	matches := empRegex.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
@@ -311,7 +263,7 @@ func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) DeletePosition(w http.ResponseWriter, r *http.Request) {
-	deleteID := positionRe.FindStringSubmatch(r.URL.Path)[1]
+	deleteID := posRegex.FindStringSubmatch(r.URL.Path)[1]
 	err := h.service.DeletePosition(r.Context(), deleteID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -329,7 +281,7 @@ func (h *Hand) DeletePosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Hand) DeleteEmployee(w http.ResponseWriter, r *http.Request) {
-	deleteID := employeeRe.FindStringSubmatch(r.URL.Path)[1]
+	deleteID := empRegex.FindStringSubmatch(r.URL.Path)[1]
 	err := h.service.DeleteEmployee(r.Context(), deleteID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)

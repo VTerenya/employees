@@ -8,6 +8,7 @@ import (
 	"github.com/VTerenya/employees/internal/middleware"
 	"github.com/VTerenya/employees/internal/repository"
 	"github.com/VTerenya/employees/internal/service"
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,21 +27,23 @@ type Handler interface { // nolint: deadcode
 
 func Run() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
-	mux := http.NewServeMux()
+	r := mux.NewRouter()
 	myData := repository.NewDataBase()
 	myRepo := repository.NewRepo(myData)
 	myServ := service.NewServ(myRepo)
 	myH := handler.NewHandler(myServ)
-	mux.Handle("/positions", myH)
-	mux.Handle("/position/", myH)
-	mux.Handle("/position", myH)
-	mux.Handle("/employees", myH)
-	mux.Handle("/employee/", myH)
-	mux.Handle("/employee", myH)
-	idMiddleware := middleware.IDMiddleware(mux)
-	timerMiddleware := middleware.TimeLogMiddleware(idMiddleware)
-	accessLogMiddleware := middleware.AccessLogMiddleware(timerMiddleware)
-	err := http.ListenAndServe("localhost:8080", accessLogMiddleware)
+	r.HandleFunc("/positions", myH.GetPositions).Queries("limit", "{limit:\\S+}", "offset", "{offset:\\S+}")
+	r.HandleFunc("/employees", myH.GetEmployees).Queries("limit", "{limit:\\S+}", "offset", "{offset:\\S+}")
+	r.HandleFunc("/position/{id:\\S+}", myH.GetPosition).Methods("GET")
+	r.HandleFunc("/employee/{id:\\S+}", myH.GetEmployee).Methods("GET")
+	r.HandleFunc("/position/{id:\\S+}", myH.DeletePosition).Methods("DELETE")
+	r.HandleFunc("/employee/{id:\\S+}", myH.DeleteEmployee).Methods("DELETE")
+	r.HandleFunc("/position", myH.UpdatePosition).Methods("PUT")
+	r.HandleFunc("/employee", myH.UpdateEmployee).Methods("PUT")
+	r.HandleFunc("/position", myH.CreatePosition).Methods("POST")
+	r.HandleFunc("/employee", myH.CreateEmployee).Methods("POST")
+	r.Use(middleware.IDMiddleware, middleware.TimeLogMiddleware, middleware.AccessLogMiddleware)
+	err := http.ListenAndServe("localhost:8080", r)
 	if err != nil {
 		log.Fatal(err)
 	}
