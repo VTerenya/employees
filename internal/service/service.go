@@ -20,12 +20,12 @@ func NewServ(repository Repository) *Serv {
 }
 
 func logCorrelationID(ctx context.Context) error {
-	corelationID, ok := ctx.Value("ID").(string)
+	correlationID, ok := ctx.Value("correlation_id").(string)
 	if !ok {
 		return errors.StatusInternalServerError()
 	}
 	logrus.WithFields(logrus.Fields{
-		"corelation_id": corelationID,
+		"correlation_id": correlationID,
 	}).Info()
 	return nil
 }

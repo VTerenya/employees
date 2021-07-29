@@ -376,7 +376,7 @@ components:
         id:
           type: string
           format: uuid
-        positionID:
+        position_id:
           type: string
           format: uuid
     position:

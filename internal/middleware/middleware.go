@@ -33,7 +33,7 @@ func TimeLogMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-const CorrelationID = "ID"
+const CorrelationID = "correlation_id"
 
 func IDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
