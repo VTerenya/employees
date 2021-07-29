@@ -1,16 +1,20 @@
 package handler
 
-import "github.com/VTerenya/employees/internal"
+import (
+	"context"
+
+	"github.com/VTerenya/employees/internal"
+)
 
 type Service interface {
-	CreatePosition(p *internal.Position) error
-	CreateEmployee(e *internal.Employee) error
-	GetPositions(limit, offset int) ([]internal.Position, error)
-	GetEmployees(limit, offset int) ([]internal.Employee, error)
-	GetPosition(id string) (internal.Position, error)
-	GetEmployee(id string) (internal.Employee, error)
-	DeletePosition(id string) error
-	DeleteEmployee(id string) error
-	UpdatePosition(p *internal.Position) error
-	UpdateEmployee(e *internal.Employee) error
+	CreatePosition(ctx context.Context, p *internal.Position) error
+	CreateEmployee(ctx context.Context, e *internal.Employee) error
+	GetPositions(ctx context.Context, limit, offset int) ([]internal.Position, error)
+	GetEmployees(ctx context.Context, limit, offset int) ([]internal.Employee, error)
+	GetPosition(ctx context.Context, id string) (internal.Position, error)
+	GetEmployee(ctx context.Context, id string) (internal.Employee, error)
+	DeletePosition(ctx context.Context, id string) error
+	DeleteEmployee(ctx context.Context, id string) error
+	UpdatePosition(ctx context.Context, p *internal.Position) error
+	UpdateEmployee(ctx context.Context, e *internal.Employee) error
 }

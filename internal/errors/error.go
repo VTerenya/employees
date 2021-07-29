@@ -1,10 +1,12 @@
 package errors
 
 var (
-	badRequest       = newError("bad request")
-	notFound         = newError("not found")
-	positionIsExists = newError("position is exists")
-	employeeIsExists = newError("employee is exists")
+	badRequest          = newError("bad request")            // nolint: gochecknoglobals
+	notFound            = newError("not found")              // nolint: gochecknoglobals
+	positionIsExists    = newError("position is exists")     // nolint: gochecknoglobals
+	employeeIsExists    = newError("employee is exists")     // nolint: gochecknoglobals
+	internalServerError = newError("internal server error")  // nolint: gochecknoglobals
+	positionIsNotExists = newError("position is not exists") // nolint: gochecknoglobals
 )
 
 type Errors struct {
@@ -33,4 +35,12 @@ func PositionIsExists() error {
 
 func EmployeeIsExists() error {
 	return employeeIsExists
+}
+
+func StatusInternalServerError() error {
+	return internalServerError
+}
+
+func PositionIsNotExists() error {
+	return positionIsNotExists
 }

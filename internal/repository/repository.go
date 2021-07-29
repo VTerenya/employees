@@ -55,8 +55,11 @@ func (t Repository) UpdatePosition(p *internal.Position) error {
 
 func (t Repository) UpdateEmployee(e *internal.Employee) error {
 	if _, ok := t.data.employees[e.ID.String()]; ok {
-		t.data.employees[e.ID.String()] = *e
-		return nil
+		if _, ok1 := t.data.positions[e.PositionID.String()]; ok1 {
+			t.data.employees[e.ID.String()] = *e
+			return nil
+		}
+		return errors.PositionIsNotExists()
 	}
 	return errors.NotFound()
 }

@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	errs "errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/VTerenya/employees/internal"
 	"github.com/VTerenya/employees/internal/errors"
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
@@ -70,7 +70,6 @@ func (h *Hand) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.UpdateEmployee(w, r)
 		return
 	default:
-		fmt.Println("errors: not found")
 		http.NotFound(w, r)
 		return
 	}
@@ -82,17 +81,19 @@ func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	limit, err := strconv.ParseInt(query["limit"][0], 10, 64)
+	limitQuery := query["limit"][0]
+	limit, err := strconv.ParseInt(limitQuery, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	offset, err := strconv.ParseInt(query["offset"][0], 10, 64)
+	offsetQuery := query["offset"][0]
+	offset, err := strconv.ParseInt(offsetQuery, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	positions, err := h.service.GetPositions(int(limit), int(offset))
+	positions, err := h.service.GetPositions(r.Context(), int(limit), int(offset))
 	if err != nil {
 		if errs.Is(err, errors.NotFound()) {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -110,7 +111,6 @@ func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
@@ -119,18 +119,19 @@ func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	limit, err := strconv.ParseInt(query["limit"][0], 10, 64)
-	fmt.Println(limit)
+	limitQuery := query["limit"][0]
+	limit, err := strconv.ParseInt(limitQuery, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	offset, err := strconv.ParseInt(query["offset"][0], 10, 64)
+	offsetQuery := query["offset"][0]
+	offset, err := strconv.ParseInt(offsetQuery, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	employees, err := h.service.GetEmployees(int(limit), int(offset))
+	employees, err := h.service.GetEmployees(r.Context(), int(limit), int(offset))
 	if err != nil {
 		if errs.Is(err, errors.NotFound()) {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -148,7 +149,6 @@ func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +157,7 @@ func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	p, err := h.service.GetPosition(matches[1])
+	p, err := h.service.GetPosition(r.Context(), matches[1])
 	if err != nil {
 		if errs.Is(err, errors.NotFound()) {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -175,7 +175,6 @@ func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
@@ -184,7 +183,7 @@ func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	e, err := h.service.GetEmployee(matches[1])
+	e, err := h.service.GetEmployee(r.Context(), matches[1])
 	if err != nil {
 		if errs.Is(err, errors.NotFound()) {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -202,7 +201,6 @@ func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
@@ -215,7 +213,7 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	err := h.service.CreatePosition(&p)
+	err := h.service.CreatePosition(r.Context(), &p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -229,7 +227,6 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusCreated)
 }
 
 func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
@@ -238,11 +235,11 @@ func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if e.LasName == "" || e.FirstName == "" || e.Position == "" {
+	if e.LasName == "" || e.FirstName == "" || e.PositionID == uuid.Nil {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	err := h.service.CreateEmployee(&e)
+	err := h.service.CreateEmployee(r.Context(), &e)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -256,7 +253,6 @@ func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusCreated)
 }
 
 func (h *Hand) UpdatePosition(w http.ResponseWriter, r *http.Request) {
@@ -265,7 +261,7 @@ func (h *Hand) UpdatePosition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err := h.service.UpdatePosition(&p)
+	err := h.service.UpdatePosition(r.Context(), &p)
 	if err != nil {
 		if errs.Is(err, errors.BadRequest()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -283,7 +279,6 @@ func (h *Hand) UpdatePosition(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
@@ -292,11 +287,14 @@ func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err := h.service.UpdateEmployee(&e)
+	err := h.service.UpdateEmployee(r.Context(), &e)
 	if err != nil {
 		if errs.Is(err, errors.BadRequest()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
+		}
+		if errs.Is(err, errors.PositionIsNotExists()) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -310,12 +308,11 @@ func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Hand) DeletePosition(w http.ResponseWriter, r *http.Request) {
 	deleteID := positionRe.FindStringSubmatch(r.URL.Path)[1]
-	err := h.service.DeletePosition(deleteID)
+	err := h.service.DeletePosition(r.Context(), deleteID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -329,12 +326,11 @@ func (h *Hand) DeletePosition(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Hand) DeleteEmployee(w http.ResponseWriter, r *http.Request) {
 	deleteID := employeeRe.FindStringSubmatch(r.URL.Path)[1]
-	err := h.service.DeleteEmployee(deleteID)
+	err := h.service.DeleteEmployee(r.Context(), deleteID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -348,5 +344,4 @@ func (h *Hand) DeleteEmployee(w http.ResponseWriter, r *http.Request) {
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusNoContent)
 }

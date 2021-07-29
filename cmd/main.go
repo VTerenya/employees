@@ -5,11 +5,13 @@ import (
 	"net/http"
 
 	"github.com/VTerenya/employees/internal/handler"
+	"github.com/VTerenya/employees/internal/middleware"
 	"github.com/VTerenya/employees/internal/repository"
 	"github.com/VTerenya/employees/internal/service"
+	"github.com/sirupsen/logrus"
 )
 
-type Handler interface {
+type Handler interface { // nolint: deadcode
 	GetPositions(w http.ResponseWriter, r *http.Request)
 	GetEmployees(w http.ResponseWriter, r *http.Request)
 	GetPosition(w http.ResponseWriter, r *http.Request)
@@ -22,7 +24,8 @@ type Handler interface {
 	UpdateEmployee(w http.ResponseWriter, r *http.Request)
 }
 
-func main() {
+func Run() {
+	logrus.SetFormatter(&logrus.JSONFormatter{})
 	mux := http.NewServeMux()
 	myData := repository.NewDataBase()
 	myRepo := repository.NewRepo(myData)
@@ -34,8 +37,15 @@ func main() {
 	mux.Handle("/employees", myH)
 	mux.Handle("/employee/", myH)
 	mux.Handle("/employee", myH)
-	err := http.ListenAndServe("localhost:8080", mux)
+	idMiddleware := middleware.IDMiddleware(mux)
+	timerMiddleware := middleware.TimeLogMiddleware(idMiddleware)
+	accessLogMiddleware := middleware.AccessLogMiddleware(timerMiddleware)
+	err := http.ListenAndServe("localhost:8080", accessLogMiddleware)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func main() {
+	Run()
 }
