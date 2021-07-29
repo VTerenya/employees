@@ -34,8 +34,3 @@ linters:
     - unused            # Checks Go code for unused constants, variables, functions and types
     - varcheck          # Finds unused global variables and constants [fast: true, auto-fix: false]
     - whitespace        # Tool for detection of leading and trailing whitespace [fast: true, auto-fix: true]
-
-linters-settings:
-  staticcheck:
-    go: "1.16"
-    checks: [ "all", "-SA1029"]

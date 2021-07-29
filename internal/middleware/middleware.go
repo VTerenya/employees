@@ -40,7 +40,7 @@ func IDMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		id := uuid.New()
 		//revive:disable
-		ctx = context.WithValue(ctx, CorrelationID, id.String())
+		ctx = context.WithValue(ctx, CorrelationID, id.String()) //nolint:staticcheck
 		//revive:enable
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
