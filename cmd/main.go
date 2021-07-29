@@ -25,6 +25,15 @@ type Handler interface { // nolint: deadcode
 	UpdateEmployee(w http.ResponseWriter, r *http.Request)
 }
 
+const (
+	pathPositions  = "/positions"
+	pathEmployees  = "/employees"
+	pathPosition   = "/position"
+	pathEmployee   = "/employee"
+	pathPositionID = "/position/{id:\\S+}"
+	pathEmployeeID = "/employee/{id:\\S+}"
+)
+
 func Run() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	r := mux.NewRouter()
@@ -32,19 +41,18 @@ func Run() {
 	myRepo := repository.NewRepo(myData)
 	myServ := service.NewServ(myRepo)
 	myH := handler.NewHandler(myServ)
-	pathID := "{id:\\S+}"
 	pathLimit := "{limit:\\S+}"
 	pathOffset := "{offset:\\S+}"
-	r.HandleFunc("/positions", myH.GetPositions).Queries("limit", pathLimit, "offset", pathOffset).Methods("GET")
-	r.HandleFunc("/employees", myH.GetEmployees).Queries("limit", pathLimit, "offset", pathOffset).Methods("GET")
-	r.HandleFunc("/position/"+pathID, myH.GetPosition).Methods("GET")
-	r.HandleFunc("/employee/"+pathID, myH.GetEmployee).Methods("GET")
-	r.HandleFunc("/position/"+pathID, myH.DeletePosition).Methods("DELETE")
-	r.HandleFunc("/employee/"+pathID, myH.DeleteEmployee).Methods("DELETE")
-	r.HandleFunc("/position", myH.UpdatePosition).Methods("PUT")
-	r.HandleFunc("/employee", myH.UpdateEmployee).Methods("PUT")
-	r.HandleFunc("/position", myH.CreatePosition).Methods("POST")
-	r.HandleFunc("/employee", myH.CreateEmployee).Methods("POST")
+	r.HandleFunc(pathPositions, myH.GetPositions).Queries("limit", pathLimit, "offset", pathOffset).Methods("GET")
+	r.HandleFunc(pathEmployees, myH.GetEmployees).Queries("limit", pathLimit, "offset", pathOffset).Methods("GET")
+	r.HandleFunc(pathPositionID, myH.GetPosition).Methods("GET")
+	r.HandleFunc(pathEmployeeID, myH.GetEmployee).Methods("GET")
+	r.HandleFunc(pathPositionID, myH.DeletePosition).Methods("DELETE")
+	r.HandleFunc(pathEmployeeID, myH.DeleteEmployee).Methods("DELETE")
+	r.HandleFunc(pathPosition, myH.UpdatePosition).Methods("PUT")
+	r.HandleFunc(pathEmployee, myH.UpdateEmployee).Methods("PUT")
+	r.HandleFunc(pathPosition, myH.CreatePosition).Methods("POST")
+	r.HandleFunc(pathEmployee, myH.CreateEmployee).Methods("POST")
 	r.Use(middleware.IDMiddleware, middleware.TimeLogMiddleware, middleware.AccessLogMiddleware)
 	err := http.ListenAndServe("localhost:8080", r)
 	if err != nil {
