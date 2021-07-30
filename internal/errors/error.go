@@ -7,6 +7,8 @@ var (
 	employeeIsExists    = newError("employee is exists")     // nolint: gochecknoglobals
 	internalServerError = newError("internal server error")  // nolint: gochecknoglobals
 	positionIsNotExists = newError("position is not exists") // nolint: gochecknoglobals
+	logError            = newError("log error")              // nolint: gochecknoglobals
+	parseError          = newError("parse error")            // nolint: gochecknoglobals
 )
 
 type Errors struct {
@@ -43,4 +45,12 @@ func StatusInternalServerError() error {
 
 func PositionIsNotExists() error {
 	return positionIsNotExists
+}
+
+func LogError() error {
+	return logError
+}
+
+func ParseError() error {
+	return parseError
 }

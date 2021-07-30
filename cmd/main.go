@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/VTerenya/employees/internal/handler"
@@ -53,7 +52,8 @@ func Run() {
 	r.HandleFunc(pathEmployee, myH.UpdateEmployee).Methods("PUT")
 	r.HandleFunc(pathPosition, myH.CreatePosition).Methods("POST")
 	r.HandleFunc(pathEmployee, myH.CreateEmployee).Methods("POST")
-	r.Use(middleware.IDMiddleware, middleware.TimeLogMiddleware, middleware.AccessLogMiddleware)
+	log := logrus.New()
+	r.Use(middleware.IDMiddleware(log), middleware.TimeLogMiddleware(log), middleware.AccessLogMiddleware(log))
 	err := http.ListenAndServe("localhost:8080", r)
 	if err != nil {
 		log.Fatal(err)

@@ -38,6 +38,10 @@ func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+		if errs.Is(err, errors.BadRequest()) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -69,6 +73,10 @@ func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+		if errs.Is(err, errors.BadRequest()) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -95,7 +103,7 @@ func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	jsonBytes, err := json.Marshal(p)
@@ -121,7 +129,7 @@ func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	jsonBytes, err := json.Marshal(e)
@@ -145,16 +153,20 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	err := h.service.CreatePosition(r.Context(), &p)
+	id, err := h.service.CreatePosition(r.Context(), &p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	jsonBytes, err := json.Marshal(p.ID)
+	resp := map[string]string{
+		"id": id,
+	}
+	jsonBytes, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(201)
 	_, er := w.Write(jsonBytes)
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
@@ -164,23 +176,27 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.ParseError().Error(), http.StatusInternalServerError)
 		return
 	}
 	if e.LasName == "" || e.FirstName == "" || e.PositionID == uuid.Nil {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	err := h.service.CreateEmployee(r.Context(), &e)
+	id, err := h.service.CreateEmployee(r.Context(), &e)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	jsonBytes, err := json.Marshal(e.ID)
+	resp := map[string]string{
+		"id": id,
+	}
+	jsonBytes, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(201)
 	_, er := w.Write(jsonBytes)
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
@@ -227,6 +243,7 @@ func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 		}
 		if errs.Is(err, errors.PositionIsNotExists()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
