@@ -59,6 +59,10 @@ func createTestContext(r *http.Request) *http.Request {
 	return r
 }
 
+type responseMap struct {
+	ID string `json:"id"`
+}
+
 func TestHand_CreateEmployeeOK(t *testing.T) {
 	initTest()
 	firstPosition := internal.Position{ID: createPosID(), Salary: decimal.New(500, 0), Name: "worker"}
@@ -100,8 +104,12 @@ func TestHand_CreateEmployeeOK(t *testing.T) {
 		if result.StatusCode != testCase.expected {
 			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			_, err := ioutil.ReadAll(result.Body)
+			var res responseMap
+			err := json.NewDecoder(result.Body).Decode(&res)
 			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := uuid.Parse(res.ID); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -173,13 +181,13 @@ func TestHand_CreateEmployee(t *testing.T) { //nolint:funlen
 		if result.StatusCode != testCase.expected {
 			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			var res responseMap
+			err := json.NewDecoder(result.Body).Decode(&res)
 			if err != nil {
 				t.Fatal(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString != testCase.body {
-				t.Fatalf("expected %v; get %v", testCase.body, bodyString)
+			if _, err := uuid.Parse(res.ID); err != nil {
+				t.Fatal(err)
 			}
 		}
 	}
@@ -215,15 +223,15 @@ func TestHand_CreatePositionOK(t *testing.T) {
 		result := w.Result()
 		defer result.Body.Close()
 		if result.StatusCode != testCase.expected {
-			t.Fatalf("expected status %v; get %v", testCase.expected, result.StatusCode)
+			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			var res responseMap
+			err := json.NewDecoder(result.Body).Decode(&res)
 			if err != nil {
 				t.Fatal(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if _, err := uuid.Parse(res.ID); err != nil {
+				t.Fatal(err)
 			}
 		}
 	}
@@ -279,15 +287,15 @@ func TestHand_CreatePosition(t *testing.T) { //nolint:funlen
 		result := w.Result()
 		defer result.Body.Close()
 		if result.StatusCode != testCase.expected {
-			t.Fatalf("expected status %v; get %v", testCase.expected, result.StatusCode)
+			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			var res responseMap
+			err := json.NewDecoder(result.Body).Decode(&res)
 			if err != nil {
 				t.Fatal(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if _, err := uuid.Parse(res.ID); err != nil {
+				t.Fatal(err)
 			}
 		}
 	}
@@ -325,15 +333,15 @@ func TestHand_DeleteEmployeeVarsZero(t *testing.T) {
 		result := w.Result()
 		defer result.Body.Close()
 		if result.StatusCode != testCase.expected {
-			t.Fatalf("expected %v; get %v", testCase.expected, result)
+			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			s, err := ioutil.ReadAll(result.Body)
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			er := strings.Trim(string(s), "\n")
+			if er != errs.BadRequest().Error() {
+				t.Fatalf("expected %v; get %v", er, errs.BadRequest())
 			}
 		}
 	}
@@ -351,18 +359,23 @@ func TestHand_DeleteEmployee(t *testing.T) {
 		method     string
 		expected   int
 		employeeID string
+		resp       string
 	}{
 		{
 			URL:        "http://localhost:8080/employee/" + employeeIDs[0],
 			method:     "DELETE",
 			employeeID: employeeIDs[0],
 			expected:   200,
+			resp: "{\"ID\":\"00000000-0000-0000-0000-000000000000\"," +
+				"\"first_name\":\"\",\"las_name\":\"\"," +
+				"\"position_id\":\"00000000-0000-0000-0000-000000000000\"}",
 		},
 		{
 			URL:        "http://localhost:8080/employee/" + uuid.New().String(),
 			method:     "DELETE",
 			employeeID: uuid.New().String(),
 			expected:   404,
+			resp:       "not found\n",
 		},
 	}
 	for _, testCase := range testTable {
@@ -379,15 +392,14 @@ func TestHand_DeleteEmployee(t *testing.T) {
 		result := w.Result()
 		defer result.Body.Close()
 		if result.StatusCode != testCase.expected {
-			t.Fatalf("expected %v; get %v", testCase.expected, result)
+			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			s, err := ioutil.ReadAll(result.Body)
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if string(s) != testCase.resp {
+				t.Fatalf("expected %v; get %v", testCase.resp, string(s))
 			}
 		}
 	}
@@ -402,6 +414,7 @@ func TestHand_DeletePositionVarsZero(t *testing.T) { //nolint: funlen
 		method     string
 		expected   int
 		positionID string
+		resp       string
 	}{
 
 		{
@@ -409,6 +422,7 @@ func TestHand_DeletePositionVarsZero(t *testing.T) { //nolint: funlen
 			method:     "DELETE",
 			positionID: positionIDs[0],
 			expected:   400,
+			resp:       "bad request\n",
 		},
 	}
 	for _, testCase := range testTable {
@@ -429,8 +443,8 @@ func TestHand_DeletePositionVarsZero(t *testing.T) { //nolint: funlen
 				t.Fatal(err)
 			}
 			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if bodyString != testCase.resp {
+				t.Fatalf("expected %v; get %v", testCase.resp, bodyString)
 			}
 		}
 	}
@@ -444,18 +458,21 @@ func TestHand_DeletePosition(t *testing.T) {
 		method     string
 		expected   int
 		positionID string
+		resp       string
 	}{
 		{
 			URL:        "http://localhost:8080/position/" + positionIDs[0],
 			method:     "DELETE",
 			positionID: positionIDs[0],
 			expected:   200,
+			resp:       "{\"id\":\"00000000-0000-0000-0000-000000000000\",\"name\":\"\",\"salary\":\"0\"}",
 		},
 		{
 			URL:        "http://localhost:8080/position/" + uuid.New().String(),
 			method:     "DELETE",
 			positionID: uuid.New().String(),
 			expected:   404,
+			resp:       "not found\n",
 		},
 	}
 	for _, testCase := range testTable {
@@ -472,15 +489,14 @@ func TestHand_DeletePosition(t *testing.T) {
 		result := w.Result()
 		defer result.Body.Close()
 		if result.StatusCode != testCase.expected {
-			t.Fatalf("expected %v; get %v", testCase.expected, result)
+			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			s, err := ioutil.ReadAll(result.Body)
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if string(s) != testCase.resp {
+				t.Fatalf("expected %v; get %v", testCase.resp, string(s))
 			}
 		}
 	}
@@ -600,12 +616,14 @@ func TestHand_GetPositionVarsZero(t *testing.T) {
 		method     string
 		expected   int
 		positionID string
+		resp       string
 	}{
 		{
 			URL:        "http://localhost:8080/position/" + positionIDs[0],
 			method:     "GET",
 			positionID: positionIDs[0],
 			expected:   400,
+			resp:       "bad request\n",
 		},
 	}
 	for _, testCase := range testTable {
@@ -626,8 +644,8 @@ func TestHand_GetPositionVarsZero(t *testing.T) {
 				t.Fatal(err)
 			}
 			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if bodyString != testCase.resp {
+				t.Fatalf("expected %v; get %v", testCase.resp, bodyString)
 			}
 		}
 	}
@@ -642,24 +660,28 @@ func TestHand_GetPosition(t *testing.T) {
 		method     string
 		expected   int
 		positionID string
+		resp       string
 	}{
 		{
 			URL:        "http://localhost:8080/position/" + positionIDs[0],
 			method:     "GET",
 			positionID: positionIDs[0],
 			expected:   200,
+			resp:       "{\"id\":\"" + positionIDs[0] + "\",\"name\":\"worker\",\"salary\":\"500\"}",
 		},
 		{
 			URL:        "http://localhost:8080/position/" + uuid.New().String(),
 			method:     "Get",
 			positionID: uuid.New().String(),
 			expected:   404,
+			resp:       "not found\n",
 		},
 		{
 			URL:        "http://localhost:8080/position/" + "12",
 			method:     "Get",
 			positionID: "12",
 			expected:   400,
+			resp:       "bad request\n",
 		},
 	}
 	for _, testCase := range testTable {
@@ -676,15 +698,14 @@ func TestHand_GetPosition(t *testing.T) {
 		result := w.Result()
 		defer result.Body.Close()
 		if result.StatusCode != testCase.expected {
-			t.Fatalf("expected %v; get %v", testCase.expected, result)
+			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			s, err := ioutil.ReadAll(result.Body)
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if string(s) != testCase.resp {
+				t.Fatalf("expected %v; get %v", testCase.resp, string(s))
 			}
 		}
 	}
@@ -696,36 +717,37 @@ func TestHand_GetEmployees(t *testing.T) { //nolint:funlen
 		URL      string
 		method   string
 		expected int
+		resp     string
 	}{
 		{
 			URL:      "http://localhost:8080/employees?limit=1&offset=1",
 			method:   "GET",
 			expected: 200,
-		},
-		{
-			URL:      "http://localhost:8080/employees?limit=1&offset=1",
-			method:   "GET",
-			expected: 200,
+			resp:     "[]",
 		},
 		{
 			URL:      "http://localhost:8080/employees?limit=asd&offset=1",
 			method:   "GET",
 			expected: 500,
+			resp:     "strconv.Atoi: parsing \"asd\": invalid syntax\n",
 		},
 		{
 			URL:      "http://localhost:8080/employees?limit=1&offset=asd",
 			method:   "GET",
 			expected: 500,
+			resp:     "strconv.Atoi: parsing \"asd\": invalid syntax\n",
 		},
 		{
 			URL:      "http://localhost:8080/employees?limit=1&offset=3",
 			method:   "GET",
 			expected: 404,
+			resp:     "not found\n",
 		},
 		{
 			URL:      "http://localhost:8080/employees?limit=110&offset=3",
 			method:   "GET",
-			expected: 500,
+			expected: 400,
+			resp:     "bad request\n",
 		},
 	}
 
@@ -740,15 +762,14 @@ func TestHand_GetEmployees(t *testing.T) { //nolint:funlen
 		result := w.Result()
 		defer result.Body.Close()
 		if result.StatusCode != testCase.expected {
-			t.Fatalf("expected %v; get %v", testCase.expected, result)
+			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			s, err := ioutil.ReadAll(result.Body)
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if string(s) != testCase.resp {
+				t.Fatalf("expected %v; get %v", testCase.resp, string(s))
 			}
 		}
 	}
@@ -760,31 +781,31 @@ func TestHand_GetPositions(t *testing.T) {
 		URL      string
 		method   string
 		expected int
+		resp     string
 	}{
 		{
 			URL:      "http://localhost:8080/positions?limit=1&offset=1",
 			method:   "GET",
 			expected: 200,
-		},
-		{
-			URL:      "http://localhost:8080/positions?limit=1&offset=1",
-			method:   "GET",
-			expected: 200,
+			resp:     "[]",
 		},
 		{
 			URL:      "http://localhost:8080/positions?limit=asd&offset=1",
 			method:   "GET",
 			expected: 500,
+			resp:     "strconv.Atoi: parsing \"asd\": invalid syntax\n",
 		},
 		{
 			URL:      "http://localhost:8080/positions?limit=1&offset=asd",
 			method:   "GET",
 			expected: 500,
+			resp:     "strconv.Atoi: parsing \"asd\": invalid syntax\n",
 		},
 		{
 			URL:      "http://localhost:8080/positions?limit=110&offset=3",
 			method:   "GET",
-			expected: 500,
+			expected: 400,
+			resp:     "bad request\n",
 		},
 	}
 
@@ -799,15 +820,14 @@ func TestHand_GetPositions(t *testing.T) {
 		result := w.Result()
 		defer result.Body.Close()
 		if result.StatusCode != testCase.expected {
-			t.Fatalf("expected %v; get %v", testCase.expected, result)
+			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			s, err := ioutil.ReadAll(result.Body)
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if string(s) != testCase.resp {
+				t.Fatalf("expected %v; get %v", testCase.resp, string(s))
 			}
 		}
 	}
@@ -850,42 +870,43 @@ func TestHand_UpdateEmployee(t *testing.T) { //nolint: funlen
 		method   string
 		expected int
 		read     io.Reader
+		resp     string
 	}{
 		{
 			URL:      "http://localhost:8080/employee",
 			method:   "PUT",
 			expected: 200,
 			read:     reader,
+			resp: "{\"ID\":\"" + employeeIDs[0] + "\",\"first_name\":\"Victor\",\"las_name\":\"Vik\"," +
+				"\"position_id\":\"" + positionIDs[0] + "\"}", //nolint:lll
 		},
 		{
 			URL:      "http://localhost:8080/employee",
 			method:   "PUT",
 			expected: 500,
 			read:     strings.NewReader("s"),
+			resp:     "invalid character 's' looking for beginning of value\n",
 		},
 		{
 			URL:      "http://localhost:8080/employee",
 			method:   "PUT",
 			expected: 404,
 			read:     strings.NewReader(string(jsonThirdEmployee)),
-		},
-		{
-			URL:      "http://localhost:8080/employee",
-			method:   "PUT",
-			expected: 200,
-			read:     strings.NewReader(string(jsonSecondEmployee)),
+			resp:     "not found\n",
 		},
 		{
 			URL:      "localhost:8080/employee",
 			method:   "PUT",
 			expected: 400,
 			read:     strings.NewReader(string(jsonFourthEmployee)),
+			resp:     "bad request\n",
 		},
 		{
 			URL:      "http://localhost:8080/employee",
 			method:   "PUT",
 			expected: 400,
 			read:     strings.NewReader(string(jsonFifthEmployee)),
+			resp:     "position is not exists\n",
 		},
 	}
 	for _, testCase := range testTable {
@@ -900,15 +921,14 @@ func TestHand_UpdateEmployee(t *testing.T) { //nolint: funlen
 		result := w.Result()
 		defer result.Body.Close()
 		if result.StatusCode != testCase.expected {
-			t.Fatalf("expected status %v; get %v", testCase.expected, result.StatusCode)
+			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			s, err := ioutil.ReadAll(result.Body)
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if string(s) != testCase.resp {
+				t.Fatalf("expected %v; get %v", testCase.resp, string(s))
 			}
 		}
 	}
@@ -931,30 +951,35 @@ func TestHand_UpdatePosition(t *testing.T) { //nolint:funlen
 		method   string
 		expected int
 		read     io.Reader
+		resp     string
 	}{
 		{
 			URL:      "http://localhost:8080/position",
 			method:   "PUT",
 			expected: 500,
 			read:     strings.NewReader("s"),
+			resp:     "invalid character 's' looking for beginning of value\n",
 		},
 		{
 			URL:      "http://localhost:8080/position",
 			method:   "PUT",
 			expected: 400,
 			read:     reader,
+			resp:     "bad request\n",
 		},
 		{
 			URL:      "http://localhost:8080/position",
 			method:   "PUT",
 			expected: 404,
 			read:     strings.NewReader(string(jsonFakeSecondPosition)),
+			resp:     "not found\n",
 		},
 		{
 			URL:      "http://localhost:8080/position",
 			method:   "PUT",
 			expected: 200,
 			read:     strings.NewReader(string(jsonSecondPosition)),
+			resp:     "{\"id\":\"" + positionIDs[0] + "\",\"name\":\"worker\",\"salary\":\"1000\"}",
 		},
 	}
 	for _, testCase := range testTable {
@@ -969,15 +994,14 @@ func TestHand_UpdatePosition(t *testing.T) { //nolint:funlen
 		result := w.Result()
 		defer result.Body.Close()
 		if result.StatusCode != testCase.expected {
-			t.Fatalf("expected status created; get %v", result.StatusCode)
+			t.Fatalf("expected %v; get %v", testCase.expected, result.StatusCode)
 		} else {
-			bodyBytes, err := ioutil.ReadAll(result.Body)
+			s, err := ioutil.ReadAll(result.Body)
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
-			bodyString := string(bodyBytes)
-			if bodyString == "" {
-				t.Fatal("get empty response body")
+			if string(s) != testCase.resp {
+				t.Fatalf("expected %v; get %v", testCase.resp, string(s))
 			}
 		}
 	}

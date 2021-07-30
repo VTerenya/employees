@@ -38,6 +38,10 @@ func (h *Hand) GetPositions(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+		if errs.Is(err, errors.BadRequest()) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -67,6 +71,10 @@ func (h *Hand) GetEmployees(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errs.Is(err, errors.NotFound()) {
 			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		if errs.Is(err, errors.BadRequest()) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -235,6 +243,7 @@ func (h *Hand) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 		}
 		if errs.Is(err, errors.PositionIsNotExists()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
