@@ -6,7 +6,7 @@ import (
 )
 
 type Position struct {
-	ID     uuid.UUID       `json:"ID"`
+	ID     uuid.UUID       `json:"id"`
 	Name   string          `json:"name"`
 	Salary decimal.Decimal `json:"salary"`
 }

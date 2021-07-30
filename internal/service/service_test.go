@@ -249,7 +249,7 @@ func TestGetPositions(t *testing.T) {
 			t.Errorf("Error!\n Expected : %#v;\nResult: %#v\n", testCase.err, err)
 		} else if err == nil &&
 			!reflect.DeepEqual(positions, testCase.expected) {
-			t.Errorf("Error!\n Expected : %#v;\nResult: %#v\n", testCase.expected, err)
+			t.Errorf("Error!\n Expected : %#v;\nResult: %#v\n", testCase.expected, positions)
 		}
 	}
 }

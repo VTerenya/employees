@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	data        *Database   //nolint: gochecknoglobals
-	repos       *Repository //nolint: gochecknoglobals
-	positionIDs []string    //nolint: gochecknoglobals
-	employeeIDs []string    //nolint: gochecknoglobals
+	data        *Database   //nolint:gochecknoglobals
+	repos       *Repository //nolint:gochecknoglobals
+	positionIDs []string    //nolint:gochecknoglobals
+	employeeIDs []string    //nolint:gochecknoglobals
 )
 
-func initData() {
+func updateData() {
 	data = NewDataBase()
 	repos = NewRepo(data)
 	positionIDs = make([]string, 0)
@@ -38,7 +38,7 @@ func createEmpID() uuid.UUID {
 }
 
 func TestGetPositions(t *testing.T) {
-	initData()
+	updateData()
 	p := internal.Position{ID: createPosID(), Name: "worker", Salary: decimal.New(500, 0)}
 	repos.AddPosition(&p)
 	testTable := []struct {
@@ -59,7 +59,7 @@ func TestGetPositions(t *testing.T) {
 }
 
 func TestGetEmployees(t *testing.T) {
-	initData()
+	updateData()
 	p := internal.Position{
 		ID:     createPosID(),
 		Name:   "worker",
@@ -91,7 +91,7 @@ func TestGetEmployees(t *testing.T) {
 }
 
 func TestAddEmployee(t *testing.T) {
-	initData()
+	updateData()
 	p := internal.Position{
 		ID:     createPosID(),
 		Name:   "worker",
@@ -124,12 +124,12 @@ func TestAddEmployee(t *testing.T) {
 		{
 			add: newEmployee,
 			expected: map[string]internal.Employee{
-				employeeIDs[0]: e,
 				employeeIDs[1]: newEmployee,
 			},
 		},
 	}
 	for _, testCase := range testTable {
+		updateData()
 		repos.AddEmployee(&testCase.add)
 		result := repos.GetEmployees()
 		if !reflect.DeepEqual(result, testCase.expected) {
@@ -139,7 +139,7 @@ func TestAddEmployee(t *testing.T) {
 }
 
 func TestAddPosition(t *testing.T) {
-	initData()
+	updateData()
 	p := internal.Position{ID: createPosID(), Name: "worker", Salary: decimal.New(500, 0)}
 	repos.AddPosition(&p)
 	newPos := internal.Position{ID: createPosID(), Name: "lead", Salary: decimal.New(2000, 0)}
@@ -156,12 +156,12 @@ func TestAddPosition(t *testing.T) {
 		{
 			add: newPos,
 			expected: map[string]internal.Position{
-				positionIDs[0]: p,
 				positionIDs[1]: newPos,
 			},
 		},
 	}
 	for _, testCase := range testTable {
+		updateData()
 		repos.AddPosition(&testCase.add)
 		result := repos.GetPositions()
 		if !reflect.DeepEqual(result, testCase.expected) {
@@ -171,7 +171,7 @@ func TestAddPosition(t *testing.T) {
 }
 
 func TestDeleteEmployee(t *testing.T) {
-	initData()
+	updateData()
 	p := internal.Position{ID: createPosID(), Name: "worker", Salary: decimal.New(500, 0)}
 	repos.AddPosition(&p)
 	firstEmp := internal.Employee{
@@ -206,11 +206,6 @@ func TestDeleteEmployee(t *testing.T) {
 			err: nil,
 		},
 		{
-			delete:   secondEmp,
-			expected: map[string]internal.Employee{},
-			err:      nil,
-		},
-		{
 			delete:   fakeEmp,
 			expected: map[string]internal.Employee{},
 			err:      errs.NotFound(),
@@ -227,7 +222,7 @@ func TestDeleteEmployee(t *testing.T) {
 }
 
 func TestDeletePosition(t *testing.T) {
-	initData()
+	updateData()
 	firstPos := internal.Position{ID: createPosID(), Name: "worker", Salary: decimal.New(500, 0)}
 	repos.AddPosition(&firstPos)
 	secondPos := internal.Position{ID: createPosID(), Name: "lead", Salary: decimal.New(2000, 0)}
@@ -246,11 +241,6 @@ func TestDeletePosition(t *testing.T) {
 			err: nil,
 		},
 		{
-			delete:   secondPos,
-			expected: map[string]internal.Position{},
-			err:      nil,
-		},
-		{
 			delete:   fakePos,
 			expected: map[string]internal.Position{},
 			err:      errs.NotFound(),
@@ -267,7 +257,7 @@ func TestDeletePosition(t *testing.T) {
 }
 
 func TestUpdateEmployee(t *testing.T) {
-	initData()
+	updateData()
 	p := internal.Position{ID: createPosID(), Name: "worker", Salary: decimal.New(500, 0)}
 	repos.AddPosition(&p)
 	firstEmp := internal.Employee{ID: createEmpID(), FirstName: "Nick", LasName: "Bobs", PositionID: p.ID}
@@ -326,7 +316,7 @@ func TestUpdateEmployee(t *testing.T) {
 }
 
 func TestUpdatePosition(t *testing.T) {
-	initData()
+	updateData()
 	firstPos := internal.Position{ID: createPosID(), Name: "worker", Salary: decimal.New(500, 0)}
 	repos.AddPosition(&firstPos)
 	id, err := uuid.Parse(positionIDs[0])

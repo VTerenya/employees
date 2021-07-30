@@ -150,11 +150,15 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	jsonBytes, err := json.Marshal(id)
+	resp := map[string]string{
+		"id": id,
+	}
+	jsonBytes, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(201)
 	_, er := w.Write(jsonBytes)
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)
@@ -164,7 +168,7 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 	var e internal.Employee
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.ParseError().Error(), http.StatusInternalServerError)
 		return
 	}
 	if e.LasName == "" || e.FirstName == "" || e.PositionID == uuid.Nil {
@@ -176,11 +180,15 @@ func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	jsonBytes, err := json.Marshal(id)
+	resp := map[string]string{
+		"id": id,
+	}
+	jsonBytes, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(201)
 	_, er := w.Write(jsonBytes)
 	if er != nil {
 		http.Error(w, er.Error(), http.StatusInternalServerError)

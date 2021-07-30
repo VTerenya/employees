@@ -19,7 +19,9 @@ func TestIDMiddleware(t *testing.T) {
 	if len(hook.Entries) != 1 {
 		t.Fatalf("error: len = 1")
 	}
-	t.Log(hook.LastEntry().Data["correlation_id"])
+	if hook.LastEntry().Data["correlation_id"] == nil {
+		t.Fatalf("correalation id is nil")
+	}
 }
 
 func TestTimeLogMiddleware(t *testing.T) {
@@ -32,7 +34,9 @@ func TestTimeLogMiddleware(t *testing.T) {
 	if len(hook.Entries) != 1 {
 		t.Fatalf("error: len = 1")
 	}
-	t.Log(hook.LastEntry().Data["work_time"])
+	if hook.LastEntry().Data["work_time"] == nil {
+		t.Fatalf("correalation id is nil")
+	}
 }
 
 func TestAccessLogMiddleware(t *testing.T) {
