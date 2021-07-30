@@ -30,26 +30,26 @@ func logCorrelationID(ctx context.Context) error {
 	return nil
 }
 
-func (t Serv) CreatePosition(ctx context.Context, p *internal.Position) error {
+func (t Serv) CreatePosition(ctx context.Context, p *internal.Position) (string, error) {
 	err := logCorrelationID(ctx)
 	if err != nil {
-		return err
+		return "", errors.LogError()
 	}
 	m := t.repo.GetPositions()
 	for _, value := range m {
 		if value.Salary.String() == p.Salary.String() && value.Name == p.Name {
-			return errors.PositionIsExists()
+			return "", errors.PositionIsExists()
 		}
 	}
 	p.ID = uuid.New()
 	t.repo.AddPosition(p)
-	return nil
+	return p.ID.String(), nil
 }
 
-func (t Serv) CreateEmployee(ctx context.Context, e *internal.Employee) error {
+func (t Serv) CreateEmployee(ctx context.Context, e *internal.Employee) (string, error) {
 	err := logCorrelationID(ctx)
 	if err != nil {
-		return err
+		return "", errors.LogError()
 	}
 	m := t.repo.GetEmployees()
 	p := t.repo.GetPositions()
@@ -61,17 +61,17 @@ func (t Serv) CreateEmployee(ctx context.Context, e *internal.Employee) error {
 		}
 	}
 	if !ok {
-		return errors.PositionIsNotExists()
+		return "", errors.PositionIsNotExists()
 	}
 	for _, value := range m {
 		if value.LasName == e.LasName &&
 			value.FirstName == e.FirstName {
-			return errors.EmployeeIsExists()
+			return "", errors.EmployeeIsExists()
 		}
 	}
 	e.ID = uuid.New()
 	t.repo.AddEmployee(e)
-	return nil
+	return e.ID.String(), nil
 }
 
 func (t Serv) GetPositions(ctx context.Context, limit, offset int) ([]internal.Position, error) {
@@ -80,7 +80,7 @@ func (t Serv) GetPositions(ctx context.Context, limit, offset int) ([]internal.P
 	}
 	err := logCorrelationID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.LogError()
 	}
 	m := t.repo.GetPositions()
 	answer := make([]internal.Position, 0)
@@ -107,7 +107,7 @@ func (t Serv) GetEmployees(ctx context.Context, limit, offset int) ([]internal.E
 	}
 	err := logCorrelationID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.LogError()
 	}
 	m := t.repo.GetEmployees()
 	answer := make([]internal.Employee, 0)
@@ -131,12 +131,12 @@ func (t Serv) GetEmployees(ctx context.Context, limit, offset int) ([]internal.E
 func (t Serv) GetPosition(ctx context.Context, id string) (internal.Position, error) {
 	err := logCorrelationID(ctx)
 	if err != nil {
-		return internal.Position{}, err
+		return internal.Position{}, errors.LogError()
 	}
 	m := t.repo.GetPositions()
 	uID, err := uuid.Parse(id)
 	if err != nil {
-		return internal.Position{}, err
+		return internal.Position{}, errors.BadRequest()
 	}
 	for _, value := range m {
 		if value.ID == uID {
@@ -149,12 +149,12 @@ func (t Serv) GetPosition(ctx context.Context, id string) (internal.Position, er
 func (t Serv) GetEmployee(ctx context.Context, id string) (internal.Employee, error) {
 	err := logCorrelationID(ctx)
 	if err != nil {
-		return internal.Employee{}, err
+		return internal.Employee{}, errors.LogError()
 	}
 	m := t.repo.GetEmployees()
 	uID, err := uuid.Parse(id)
 	if err != nil {
-		return internal.Employee{}, err
+		return internal.Employee{}, errors.ParseError()
 	}
 	for _, value := range m {
 		if value.ID == uID {
@@ -167,7 +167,7 @@ func (t Serv) GetEmployee(ctx context.Context, id string) (internal.Employee, er
 func (t Serv) DeletePosition(ctx context.Context, id string) error {
 	err := logCorrelationID(ctx)
 	if err != nil {
-		return err
+		return errors.LogError()
 	}
 	return t.repo.DeletePosition(id)
 }
@@ -175,7 +175,7 @@ func (t Serv) DeletePosition(ctx context.Context, id string) error {
 func (t Serv) DeleteEmployee(ctx context.Context, id string) error {
 	err := logCorrelationID(ctx)
 	if err != nil {
-		return err
+		return errors.LogError()
 	}
 	return t.repo.DeleteEmployee(id)
 }
@@ -183,7 +183,7 @@ func (t Serv) DeleteEmployee(ctx context.Context, id string) error {
 func (t Serv) UpdatePosition(ctx context.Context, p *internal.Position) error {
 	err := logCorrelationID(ctx)
 	if err != nil {
-		return err
+		return errors.LogError()
 	}
 	if p.ID.String() == uuid.Nil.String() {
 		return errors.BadRequest()
@@ -194,9 +194,9 @@ func (t Serv) UpdatePosition(ctx context.Context, p *internal.Position) error {
 func (t Serv) UpdateEmployee(ctx context.Context, e *internal.Employee) error {
 	err := logCorrelationID(ctx)
 	if err != nil {
-		return err
+		return errors.LogError()
 	}
-	if e.ID.String() == uuid.Nil.String() {
+	if e.ID == uuid.Nil {
 		return errors.BadRequest()
 	}
 	return t.repo.UpdateEmployee(e)

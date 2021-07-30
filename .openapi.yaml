@@ -91,6 +91,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/responses/not_found_error"
+        '400':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/bad_request"
         '500':
           description: "Internal server errors"
     get:
@@ -329,6 +335,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/responses/not_found_error"
+        '400':
+          description: "Page not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/bad_request"
         '500':
           description: "Internal server errors"
     get:

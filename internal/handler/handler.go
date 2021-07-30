@@ -95,7 +95,7 @@ func (h *Hand) GetPosition(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	jsonBytes, err := json.Marshal(p)
@@ -121,7 +121,7 @@ func (h *Hand) GetEmployee(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	jsonBytes, err := json.Marshal(e)
@@ -145,12 +145,12 @@ func (h *Hand) CreatePosition(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	err := h.service.CreatePosition(r.Context(), &p)
+	id, err := h.service.CreatePosition(r.Context(), &p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	jsonBytes, err := json.Marshal(p.ID)
+	jsonBytes, err := json.Marshal(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -171,12 +171,12 @@ func (h *Hand) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.BadRequest().Error(), http.StatusBadRequest)
 		return
 	}
-	err := h.service.CreateEmployee(r.Context(), &e)
+	id, err := h.service.CreateEmployee(r.Context(), &e)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	jsonBytes, err := json.Marshal(e.ID)
+	jsonBytes, err := json.Marshal(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
